@@ -18,6 +18,9 @@ export const AiLinkSchema = z.object({
 });
 export type AiLink = z.infer<typeof AiLinkSchema>;
 
+export const TodoMarkerSchema = z.enum(["circle", "triangle", "square", "diamond"]);
+export type TodoMarker = z.infer<typeof TodoMarkerSchema>;
+
 export const TodoSchema = z.object({
   id: z.string(),
   subjectId: z.string(),
@@ -29,9 +32,14 @@ export const TodoSchema = z.object({
   aiEnrichmentStatus: AiEnrichmentStatusSchema,
   aiSummary: z.string().optional(),
   aiLinks: z.array(AiLinkSchema).optional(),
-  aiLastRunAt: z.string().datetime().optional()
+  aiLastRunAt: z.string().datetime().optional(),
+  priority: z.number().int().min(1).max(5).optional(),
+  complexity: z.number().int().min(1).max(3).optional(),
+  marker: TodoMarkerSchema.optional()
 });
 
 export type Todo = z.infer<typeof TodoSchema>;
 
-export type TodoUpdateFields = Partial<Pick<Todo, "title" | "notes" | "status">>;
+export type TodoUpdateFields = Partial<
+  Pick<Todo, "title" | "notes" | "status" | "priority" | "complexity" | "marker">
+>;

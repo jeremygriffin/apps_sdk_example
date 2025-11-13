@@ -85,6 +85,9 @@ const readEnvJson = (
     logger.warn("failed to read env.json", {
       error: error instanceof Error ? error.message : String(error)
     });
+    if (error instanceof SyntaxError) {
+      throw error;
+    }
     return {};
   }
 };

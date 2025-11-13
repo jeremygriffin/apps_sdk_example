@@ -16,6 +16,7 @@ describe("prompt registry", () => {
       "brain_dump_to_todos",
       "summarize_todos",
       "prioritize_todos",
+      "summarize_todo_load",
       "clarify_todo",
       "suggest_subtasks"
     ]);
@@ -59,6 +60,26 @@ describe("prompt registry", () => {
     const prompt = getPromptByName("prioritize_todos");
     expect(prompt).toBeDefined();
     expect(() => normalizePromptArguments(prompt!, {})).toThrow(PromptArgumentError);
+  });
+
+  it("validates timeframe enum for prioritize_todos", () => {
+    const prompt = getPromptByName("prioritize_todos");
+    expect(prompt).toBeDefined();
+    expect(() =>
+      normalizePromptArguments(prompt!, { todosJson: "[]", timeframe: "today" })
+    ).not.toThrow();
+    expect(() =>
+      normalizePromptArguments(prompt!, { todosJson: "[]", timeframe: "next_month" })
+    ).toThrow(PromptArgumentError);
+  });
+
+  it("renders the summarize_todo_load prompt with todos placeholder", () => {
+    const prompt = getPromptByName("summarize_todo_load");
+    expect(prompt).toBeDefined();
+    const rendered = renderPromptMessage(prompt!.messages[1], {
+      todosJson: '[{"id":"1","priority":5}]'
+    });
+    expect(rendered).toContain('[{"id":"1","priority":5}]');
   });
 
   it("renders prompt messages with placeholder substitution", () => {

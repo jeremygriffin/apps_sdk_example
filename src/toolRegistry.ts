@@ -1,3 +1,5 @@
+import { performance } from "node:perf_hooks";
+
 import { z, ZodTypeAny } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
@@ -166,4 +168,3 @@ export const executeToolByName = async (
     throw error;
   }
 };
-import { performance } from "node:perf_hooks";

@@ -26,9 +26,8 @@ const toolFactories = [
   createUpdateTodoTool
 ];
 
-export const tools: ToolDefinition<ZodTypeAny, ZodTypeAny>[] = toolFactories.map((factory) =>
-  factory(store)
-);
+export const tools: ToolDefinition<ZodTypeAny, ZodTypeAny>[] = toolFactories
+  .map((factory) => factory(store)) as unknown as ToolDefinition<ZodTypeAny, ZodTypeAny>[];
 
 const SCHEMA_OPTIONS = {
   $refStrategy: "none"

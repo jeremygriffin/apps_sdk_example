@@ -62,7 +62,7 @@ export const startSseServer = (options: SseServerOptions = {}) => {
           try {
             await mcpServer.close();
           } catch (error) {
-            logger.warn("failed to close SSE MCP server", {
+            serverLogger.warn("failed to close SSE MCP server", {
               error: error instanceof Error ? error.message : String(error)
             });
           }

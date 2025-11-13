@@ -1,3 +1,3 @@
-import { startStreamingServer } from "./servers/streamingServer";
+import { startUnifiedServer } from "./servers/unifiedServer";
 
-startStreamingServer();
+startUnifiedServer();

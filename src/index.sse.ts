@@ -1,3 +1,3 @@
-import { startSseServer } from "./servers/sseServer";
+import { startUnifiedServer } from "./servers/unifiedServer";
 
-startSseServer();
+startUnifiedServer();

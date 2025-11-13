@@ -1,7 +1,10 @@
 import { z, ZodTypeAny } from "zod";
 
+import { Logger } from "../logger";
+
 export interface ToolContext {
   subjectId: string;
+  logger: Logger;
   metadata?: Record<string, unknown>;
 }
 

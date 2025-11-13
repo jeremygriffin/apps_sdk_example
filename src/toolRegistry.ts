@@ -4,7 +4,7 @@ import { z, ZodTypeAny } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { config } from "./config";
-import { logger, maskSubjectId, shouldDebugToolCalls } from "./logger";
+import { logger, Logger, maskSubjectId, shouldDebugToolCalls } from "./logger";
 import { Store } from "./storage";
 import { createMemoryStore } from "./storage/memoryStore";
 import { ToolContext, ToolDefinition, ToolMetadata } from "./types/tool";
@@ -71,12 +71,13 @@ const extractSubjectFromMetadata = (metadata: ToolMetadata): string => {
 
 export const buildToolContextFromMeta = (
   metadata: ToolMetadata,
-  overrides?: { subjectId?: string }
+  overrides?: { subjectId?: string; logger?: Logger }
 ): ToolContext => {
   const subjectId = overrides?.subjectId ?? extractSubjectFromMetadata(metadata);
   return {
     subjectId,
-    metadata
+    metadata,
+    logger: overrides?.logger ?? logger
   };
 };
 
@@ -96,6 +97,7 @@ export const getToolCatalog = () =>
 export interface ExecuteToolOptions {
   metadata?: ToolMetadata;
   subjectId?: string;
+  logger?: Logger;
 }
 
 export const executeToolByName = async (
@@ -109,7 +111,8 @@ export const executeToolByName = async (
   }
   const metadata = options.metadata;
   const subjectId = options.subjectId ?? extractSubjectFromMetadata(metadata);
-  const ctx = buildToolContextFromMeta(metadata, { subjectId });
+  const activeLogger = options.logger ?? logger;
+  const ctx = buildToolContextFromMeta(metadata, { subjectId, logger: activeLogger });
   const maskedSubject = maskSubjectId(subjectId);
 
   let parsedInput: z.infer<typeof tool.inputSchema>;
@@ -117,7 +120,7 @@ export const executeToolByName = async (
   try {
     parsedInput = tool.inputSchema.parse(rawInput ?? {});
   } catch (error) {
-    logger.warn("tool input validation failed", {
+    activeLogger.warn("tool input validation failed", {
       tool: tool.name,
       subject: maskedSubject,
       error: error instanceof Error ? error.message : "unknown"
@@ -125,15 +128,15 @@ export const executeToolByName = async (
     throw error;
   }
   const parseDuration = performance.now() - parseStart;
-  if (shouldDebugToolCalls()) {
-    logger.debug("tool input accepted", {
+  if (shouldDebugToolCalls(activeLogger)) {
+    activeLogger.debug("tool input accepted", {
       tool: tool.name,
       subject: maskedSubject,
       durationMs: parseDuration,
       input: parsedInput
     });
   } else {
-    logger.info("tool invoked", {
+    activeLogger.info("tool invoked", {
       tool: tool.name,
       subject: maskedSubject,
       durationMs: parseDuration
@@ -144,15 +147,15 @@ export const executeToolByName = async (
   try {
     const result = await tool.handler(parsedInput, ctx);
     const durationMs = performance.now() - start;
-    if (shouldDebugToolCalls()) {
-      logger.debug("tool completed", {
+    if (shouldDebugToolCalls(activeLogger)) {
+      activeLogger.debug("tool completed", {
         tool: tool.name,
         subject: maskedSubject,
         durationMs,
         output: result
       });
     } else {
-      logger.info("tool completed", {
+      activeLogger.info("tool completed", {
         tool: tool.name,
         subject: maskedSubject,
         durationMs
@@ -160,7 +163,7 @@ export const executeToolByName = async (
     }
     return result;
   } catch (error) {
-    logger.error("tool failed", {
+    activeLogger.error("tool failed", {
       tool: tool.name,
       subject: maskedSubject,
       error: error instanceof Error ? error.message : error

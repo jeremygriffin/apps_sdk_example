@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 
-import { TodoNotFoundError } from "../errors";
-import { logger as defaultLogger, Logger, maskSubjectId } from "../logger";
-import { nowIsoString } from "../utils/datetime";
-import { AiLink, Todo, TodoUpdateFields } from "../types/todo";
+import { TodoNotFoundError } from "@/errors";
+import { logger as defaultLogger, Logger, maskSubjectId } from "@/logger";
+import { nowIsoString } from "@/utils/datetime";
+import { AiLink, Todo, TodoUpdateFields } from "@/types/todo";
 import { Store } from "./index";
 
 interface MemoryStoreOptions {
@@ -113,6 +113,15 @@ export const createMemoryStore = (options: MemoryStoreOptions = {}): Store => {
       }
       if (updates.status !== undefined) {
         todo.status = updates.status;
+      }
+      if (updates.priority !== undefined) {
+        todo.priority = updates.priority;
+      }
+      if (updates.complexity !== undefined) {
+        todo.complexity = updates.complexity;
+      }
+      if (updates.marker !== undefined) {
+        todo.marker = updates.marker;
       }
       todo.updatedAt = nowIsoString();
       logDebug(activeLogger, "store.updateTodo", {

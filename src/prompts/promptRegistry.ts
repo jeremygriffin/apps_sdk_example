@@ -121,7 +121,7 @@ export const prompts: PromptDefinition[] = PromptCatalogSchema.parse([
       {
         name: "todosJson",
         description:
-          "JSON array of todos retrieved from list_todos. Includes status, notes, and metadata.",
+          "JSON array of todos retrieved from list_todos. Includes status, notes, and metadata. Example: [{\"id\":\"todo-1\",\"title\":\"Draft plan\",\"status\":\"pending\",\"notes\":\"optional context\"}]",
         required: true,
         type: "string"
       },
@@ -148,18 +148,46 @@ export const prompts: PromptDefinition[] = PromptCatalogSchema.parse([
   {
     name: "prioritize_todos",
     description:
-      "Assign high/medium/low priorities to todos and recommend a small focus list with justifications.",
+      "Rank todos using annotation signals (priority, complexity, marker) and recommend an action plan for the requested timeframe.",
     arguments: [
       {
         name: "todosJson",
-        description: "JSON array of todos to prioritize.",
+        description:
+          "JSON array of todos with annotations (priority 1-5, complexity 1-3, marker circle/triangle/square/diamond). Example: [{\"id\":\"todo-2\",\"title\":\"Prep report\",\"priority\":4,\"complexity\":2,\"marker\":\"triangle\"}]",
         required: true,
         type: "string"
       },
       {
-        name: "maxFocusItems",
-        description: "Optional cap for the recommended focus list. Provide an integer as a string.",
+        name: "timeframe",
+        description: "Optional planning window (today, this_week, or later).",
         required: false,
+        type: "enum",
+        enumValues: ["today", "this_week", "later"]
+      }
+    ],
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a task-planning assistant.\n\nEach todo includes annotations:\n- priority (1-5) => importance/urgency\n- complexity (1-3) => effort/time required\n- marker:\n  * circle => quick / lightweight\n  * triangle => needs attention or risky\n  * square => routine / maintenance\n  * diamond => strategic / high-value\n\nInstructions:\n1. Rank todos from most urgent/important to least using priority + marker context.\n2. Identify quick wins (priority >=3 AND complexity <=2, or marker=circle).\n3. Identify deep work (complexity >=3 or marker=diamond).\n4. Call out strategic/high-value items (marker=diamond) even if not at the top.\n5. Produce a recommended plan that respects the timeframe input when provided (default to current planning cycle).\n6. Return JSON: {\"ordered\": [{\"id\":\"todo id\",\"title\":\"string\",\"reason\":\"why ordered here\"}], \"quickWins\": [\"todo id\"], \"deepWork\": [\"todo id\"], \"strategic\": [\"todo id\"], \"recommendations\": [\"short guidance\"]}.\n7. Reference annotation values in explanations so the user understands why items were categorized.\n8. Never invent todos."
+      },
+      {
+        role: "user",
+        content:
+          "Here are the todos to prioritize (JSON array):\n{{todosJson}}\n\nRequested timeframe (today/this_week/later or blank): {{timeframe}}"
+      }
+    ]
+  },
+  {
+    name: "summarize_todo_load",
+    description:
+      "Summarize the user’s workload by grouping todos into buckets using their annotations.",
+    arguments: [
+      {
+        name: "todosJson",
+        description:
+          "JSON array of todos with priority, complexity, and marker annotations to analyze. Example: [{\"id\":\"todo-7\",\"title\":\"Refactor auth\",\"priority\":5,\"complexity\":3,\"marker\":\"diamond\"}]",
+        required: true,
         type: "string"
       }
     ],
@@ -167,12 +195,11 @@ export const prompts: PromptDefinition[] = PromptCatalogSchema.parse([
       {
         role: "system",
         content:
-          "Prioritize the provided todos. Return JSON: {\"prioritized\": [{\"id\": \"todo id\", \"title\": \"string\", \"priority\": \"high|medium|low\", \"justification\": \"short\"}], \"focus\": [\"todo id\"], \"notes\": \"short guidance\"}. Always classify every todo. Respect maxFocusItems when selecting the focus list (default 3). Justifications should reference urgency, blockers, or dependencies."
+          "Summarize the user's workload using annotation-aware buckets.\n\nUse the following categories (each todo may appear in multiple when justified):\n- Top Priority: priority 4-5\n- Quick Wins: complexity <=2 or marker=circle\n- Deep Work: complexity >=3 or marker=diamond\n- Maintenance / Routine: marker=square\n- Attention Needed: marker=triangle\n\nInstructions:\n1. Mention how many todos land in each bucket and highlight representative titles.\n2. Call out risks, bottlenecks, or missing annotations when relevant.\n3. Provide actionable guidance on how to tackle the workload.\n4. Output JSON: {\"summary\":\"short narrative\",\"buckets\":[{\"name\":\"bucket\",\"items\":[{\"id\":\"todo\",\"title\":\"string\"}]}],\"recommendations\":[\"action\"],\"risks\":[\"risk or empty\"]}.\n5. Always reference annotation values in explanations when available and note when data is missing."
       },
       {
         role: "user",
-        content:
-          "Todos for prioritization:\n{{todosJson}}\n\nMax focus items (optional): {{maxFocusItems}}"
+        content: "Here are the todos with annotations:\n{{todosJson}}"
       }
     ]
   },

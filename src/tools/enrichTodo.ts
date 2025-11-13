@@ -1,11 +1,11 @@
 import { z } from "zod";
 
-import { TodoNotFoundError } from "../errors";
-import { maskSubjectId, shouldDebugToolCalls } from "../logger";
-import { Store } from "../storage";
-import { TodoSchema } from "../types/todo";
-import { ToolDefinition } from "../types/tool";
-import { nowIsoString } from "../utils/datetime";
+import { TodoNotFoundError } from "@/errors";
+import { maskSubjectId, shouldDebugToolCalls } from "@/logger";
+import { Store } from "@/storage";
+import { TodoSchema } from "@/types/todo";
+import { ToolDefinition } from "@/types/tool";
+import { nowIsoString } from "@/utils/datetime";
 
 const InputSchema = z.object({
   todoId: z.string().min(1, "todoId is required")

@@ -1,12 +1,12 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { describe, expect, it, vi } from "vitest";
 
-import { createLogger } from "../../src/logger";
-import { wireLoggingCapability } from "../../src/mcp/createServer";
+import { createLogger } from "@/logger";
+import { wireLoggingCapability } from "@/mcp/createServer";
 
 const createStubServer = () => {
   let handler: ((request: { params: { level: string } }) => Promise<unknown> | unknown) | undefined;
-  const sendNotification = vi.fn();
+  const notification = vi.fn().mockResolvedValue(undefined);
   const registerCapabilities = vi.fn();
   const assertHandler = vi.fn();
   const stub = {
@@ -16,14 +16,14 @@ const createStubServer = () => {
       setRequestHandler: vi.fn((_schema, cb) => {
         handler = cb;
       }),
-      sendNotification
+      notification
     },
     close: vi.fn(async () => {})
   } as unknown as McpServer;
 
   return {
     stub,
-    sendNotification,
+    notification,
     registerCapabilities,
     getHandler: () => handler
   };
@@ -49,34 +49,40 @@ describe("wireLoggingCapability", () => {
   });
 
   it("forwards log events as notifications", () => {
-    const { stub, sendNotification } = createStubServer();
+    const { stub, notification } = createStubServer();
     const log = createLogger("info", () => {});
 
     wireLoggingCapability(stub, log);
     log.info("unit", { foo: "bar" });
 
-    expect(sendNotification).toHaveBeenCalledWith("notifications/message", {
-      level: "info",
-      logger: "unit",
-      data: { foo: "bar" }
+    expect(notification).toHaveBeenCalledWith({
+      method: "notifications/message",
+      params: {
+        level: "info",
+        logger: "unit",
+        data: { foo: "bar" }
+      }
     });
   });
 
   it("filters notifications according to the active log level", async () => {
-    const { stub, sendNotification, getHandler } = createStubServer();
+    const { stub, notification, getHandler } = createStubServer();
     const log = createLogger("info", () => {});
 
     wireLoggingCapability(stub, log);
     const handler = getHandler();
     await handler!({ params: { level: "error" } });
     log.info("unit");
-    expect(sendNotification).not.toHaveBeenCalled();
+    expect(notification).not.toHaveBeenCalled();
 
     log.error("unit");
-    expect(sendNotification).toHaveBeenCalledWith("notifications/message", {
-      level: "error",
-      logger: "unit",
-      data: {}
+    expect(notification).toHaveBeenCalledWith({
+      method: "notifications/message",
+      params: {
+        level: "error",
+        logger: "unit",
+        data: {}
+      }
     });
   });
 });

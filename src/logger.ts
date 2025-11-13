@@ -34,7 +34,9 @@ const LEVEL_WEIGHT: Record<LogLevel, number> = LOG_LEVEL_ORDER.reduce(
   {} as Record<LogLevel, number>
 );
 
-const pickConsoleMethod = (level: LogLevel): keyof Console => {
+type ConsoleLogMethod = "debug" | "info" | "warn" | "error";
+
+const pickConsoleMethod = (level: LogLevel): ConsoleLogMethod => {
   if (level === "warning" || level === "notice") {
     return "warn";
   }

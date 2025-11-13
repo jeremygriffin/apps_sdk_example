@@ -46,4 +46,12 @@ describe("runtime config loader", () => {
 
     expect(cfg.server.port).toBe(5100);
   });
+
+  test("throws when env file contains invalid json", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "config-test-"));
+    const envPath = path.join(dir, "env.json");
+    fs.writeFileSync(envPath, "{ invalid");
+
+    expect(() => loadRuntimeConfig({ env: {}, envFilePath: envPath })).toThrow(SyntaxError);
+  });
 });

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { TodoNotFoundError } from "../../src/errors";
-import { createDeleteTodoTool } from "../../src/tools/deleteTodo";
+import { TodoNotFoundError } from "@/errors";
+import { createDeleteTodoTool } from "@/tools/deleteTodo";
 import { createTestContext, createTestStore } from "../helpers/toolkit";
 
 describe("delete_todo tool", () => {

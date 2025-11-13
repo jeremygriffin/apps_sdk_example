@@ -7,7 +7,7 @@ import { config } from "./config";
 import { logger, Logger, maskSubjectId, shouldDebugToolCalls } from "./logger";
 import { Store } from "./storage";
 import { createMemoryStore } from "./storage/memoryStore";
-import { ToolContext, ToolDefinition, ToolMetadata } from "./types/tool";
+import { AnyToolDefinition, ToolContext, ToolMetadata } from "./types/tool";
 import { createCreateTodoTool } from "./tools/createTodo";
 import { createDeleteTodoTool } from "./tools/deleteTodo";
 import { createEnrichTodoTool } from "./tools/enrichTodo";
@@ -17,7 +17,9 @@ import { createUpdateTodoTool } from "./tools/updateTodo";
 
 const store: Store = createMemoryStore();
 
-const toolFactories = [
+type ToolFactory = (store: Store) => AnyToolDefinition;
+
+const toolFactories: ToolFactory[] = [
   createListTodosTool,
   createCreateTodoTool,
   createToggleTodoTool,
@@ -26,9 +28,7 @@ const toolFactories = [
   createUpdateTodoTool
 ];
 
-export const tools: ToolDefinition<ZodTypeAny, ZodTypeAny>[] = toolFactories.map((factory) =>
-  factory(store)
-);
+export const tools: AnyToolDefinition[] = toolFactories.map((factory) => factory(store));
 
 const SCHEMA_OPTIONS = {
   $refStrategy: "none"
@@ -36,9 +36,7 @@ const SCHEMA_OPTIONS = {
 
 const schemaCache = new Map<string, { input: unknown; output: unknown }>();
 
-export const getToolSchemas = (
-  tool: ToolDefinition<ZodTypeAny, ZodTypeAny>
-): { input: unknown; output: unknown } => {
+export const getToolSchemas = (tool: AnyToolDefinition): { input: unknown; output: unknown } => {
   if (schemaCache.has(tool.name)) {
     return schemaCache.get(tool.name)!;
   }

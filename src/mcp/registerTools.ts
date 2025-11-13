@@ -5,9 +5,9 @@ import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/proto
 import type { ServerNotification, ServerRequest } from "@modelcontextprotocol/sdk/types.js";
 import { type ZodRawShape, type ZodTypeAny, ZodEffects, ZodObject } from "zod";
 
-import { Logger } from "../logger";
-import { executeToolByName, tools } from "../toolRegistry";
-import type { ToolMetadata } from "../types/tool";
+import { Logger } from "@/logger";
+import { executeToolByName, tools } from "@/toolRegistry";
+import type { ToolMetadata } from "@/types/tool";
 
 const SUBJECT_HEADER_CANDIDATES = ["x-openai-subject", "x-subject-id", "openai-subject"];
 
@@ -52,6 +52,17 @@ const sanitizeMetadata = (meta: unknown): Record<string, unknown> | undefined =>
   return { ...(meta as Record<string, unknown>) };
 };
 
+const extractSubjectFromAuthExtra = (extraData: unknown): string | undefined => {
+  if (!extraData || typeof extraData !== "object") {
+    return undefined;
+  }
+  const candidate = (extraData as Record<string, unknown>).subject;
+  if (typeof candidate === "string" && candidate.trim().length > 0) {
+    return candidate.trim();
+  }
+  return undefined;
+};
+
 const normalizeSubjectId = (
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>,
   metadata: Record<string, unknown> | undefined
@@ -60,7 +71,8 @@ const normalizeSubjectId = (
   if (headerSubject) {
     return headerSubject;
   }
-  const authSubject = typeof extra.authInfo?.subject === "string" ? extra.authInfo.subject : undefined;
+  const authSubject =
+    extractSubjectFromAuthExtra(extra.authInfo?.extra) ?? extractSubjectFromAuthExtra(extra.authInfo);
   if (authSubject) {
     return authSubject;
   }

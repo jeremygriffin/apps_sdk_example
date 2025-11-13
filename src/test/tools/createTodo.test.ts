@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { createCreateTodoTool } from "../../src/tools/createTodo";
+import { createCreateTodoTool } from "@/tools/createTodo";
 import { createTestContext, createTestStore } from "../helpers/toolkit";
 
 describe("create_todo tool", () => {

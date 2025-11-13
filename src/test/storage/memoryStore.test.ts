@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { TodoNotFoundError } from "../../src/errors";
-import { createMemoryStore } from "../../src/storage/memoryStore";
+import { TodoNotFoundError } from "@/errors";
+import { createMemoryStore } from "@/storage/memoryStore";
 import { createSilentLogger } from "../helpers/logger";
 
 describe("memoryStore", () => {
@@ -35,12 +35,18 @@ describe("memoryStore", () => {
 
     await store.updateTodo("subject-a", created.id, {
       title: "Draft updated proposal",
-      status: "in_progress"
+      status: "in_progress",
+      priority: 5,
+      complexity: 2,
+      marker: "diamond"
     });
 
     const updated = await store.getTodoById("subject-a", created.id);
     expect(updated?.title).toBe("Draft updated proposal");
     expect(updated?.status).toBe("in_progress");
+    expect(updated?.priority).toBe(5);
+    expect(updated?.complexity).toBe(2);
+    expect(updated?.marker).toBe("diamond");
 
     const toggled = await store.toggleTodoStatus("subject-a", created.id);
     expect(toggled.status).toBe("done");

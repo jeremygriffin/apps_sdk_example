@@ -6,10 +6,10 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
-import { config } from "../config";
-import { createLogger, logger as defaultLogger, Logger } from "../logger";
-import { createMcpServer } from "../mcp/createServer";
-import { readJsonBody } from "../utils/http";
+import { config } from "@/config";
+import { createLogger, logger as defaultLogger, Logger } from "@/logger";
+import { createMcpServer } from "@/mcp/createServer";
+import { readJsonBody } from "@/utils/http";
 
 export interface UnifiedServerOptions {
   host?: string;

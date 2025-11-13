@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError, SetLevelRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 
-import { isLogLevel, logger as defaultLogger, Logger } from "../logger";
+import { isLogLevel, logger as defaultLogger, Logger } from "@/logger";
 import { registerToolsWithServer } from "./registerTools";
 import { registerPromptsWithServer } from "./registerPrompts";
 
@@ -31,10 +31,13 @@ export const wireLoggingCapability = (server: McpServer, log: Logger) => {
   });
 
   log.sendLogMessage = (level, loggerName, data) => {
-    server.server.sendNotification("notifications/message", {
-      level,
-      logger: loggerName,
-      data: data ?? {}
+    void server.server.notification({
+      method: "notifications/message",
+      params: {
+        level,
+        logger: loggerName,
+        data: data ?? {}
+      }
     });
   };
 };

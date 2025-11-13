@@ -1,6 +1,6 @@
 import { z, ZodTypeAny } from "zod";
 
-import { Logger } from "../logger";
+import { Logger } from "@/logger";
 
 export interface ToolContext {
   subjectId: string;
@@ -8,12 +8,18 @@ export interface ToolContext {
   metadata?: Record<string, unknown>;
 }
 
+export interface AnyToolDefinition {
+  name: string;
+  description: string;
+  inputSchema: ZodTypeAny;
+  outputSchema: ZodTypeAny;
+  handler: (input: any, ctx: ToolContext) => Promise<any>;
+}
+
 export interface ToolDefinition<
   InputSchema extends ZodTypeAny,
   OutputSchema extends ZodTypeAny
-> {
-  name: string;
-  description: string;
+> extends AnyToolDefinition {
   inputSchema: InputSchema;
   outputSchema: OutputSchema;
   handler: (

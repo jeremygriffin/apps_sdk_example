@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { describe, expect, it } from "vitest";
 
-import { registerPromptsWithServer } from "../../src/mcp/registerPrompts";
-import { prompts } from "../../src/prompts/promptRegistry";
+import { registerPromptsWithServer } from "../../mcp/registerPrompts";
+import { prompts } from "../../prompts/promptRegistry";
 import { createSilentLogger } from "../helpers/logger";
 
 describe("registerPromptsWithServer", () => {
@@ -25,7 +25,7 @@ describe("registerPromptsWithServer", () => {
     const server = createServer();
     registerPromptsWithServer(server, createSilentLogger());
 
-    const capabilities = server.server.getCapabilities();
+    const capabilities = (server.server as unknown as { _capabilities: Record<string, unknown> })._capabilities;
     expect(capabilities.prompts).toEqual({});
 
     const listHandler = getRequestHandler(server, "prompts/list");

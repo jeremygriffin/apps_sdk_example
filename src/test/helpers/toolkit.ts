@@ -1,5 +1,5 @@
-import { Store } from "../../src/storage";
-import { createMemoryStore } from "../../src/storage/memoryStore";
+import { Store } from "../../storage";
+import { createMemoryStore } from "../../storage/memoryStore";
 
 import { createSilentLogger } from "./logger";
 

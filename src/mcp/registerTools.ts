@@ -52,6 +52,17 @@ const sanitizeMetadata = (meta: unknown): Record<string, unknown> | undefined =>
   return { ...(meta as Record<string, unknown>) };
 };
 
+const extractSubjectFromAuthExtra = (extraData: unknown): string | undefined => {
+  if (!extraData || typeof extraData !== "object") {
+    return undefined;
+  }
+  const candidate = (extraData as Record<string, unknown>).subject;
+  if (typeof candidate === "string" && candidate.trim().length > 0) {
+    return candidate.trim();
+  }
+  return undefined;
+};
+
 const normalizeSubjectId = (
   extra: RequestHandlerExtra<ServerRequest, ServerNotification>,
   metadata: Record<string, unknown> | undefined
@@ -60,7 +71,8 @@ const normalizeSubjectId = (
   if (headerSubject) {
     return headerSubject;
   }
-  const authSubject = typeof extra.authInfo?.subject === "string" ? extra.authInfo.subject : undefined;
+  const authSubject =
+    extractSubjectFromAuthExtra(extra.authInfo?.extra) ?? extractSubjectFromAuthExtra(extra.authInfo);
   if (authSubject) {
     return authSubject;
   }

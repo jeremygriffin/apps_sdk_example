@@ -31,10 +31,13 @@ export const wireLoggingCapability = (server: McpServer, log: Logger) => {
   });
 
   log.sendLogMessage = (level, loggerName, data) => {
-    server.server.sendNotification("notifications/message", {
-      level,
-      logger: loggerName,
-      data: data ?? {}
+    void server.server.notification({
+      method: "notifications/message",
+      params: {
+        level,
+        logger: loggerName,
+        data: data ?? {}
+      }
     });
   };
 };

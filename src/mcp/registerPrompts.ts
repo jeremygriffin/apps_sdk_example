@@ -40,10 +40,15 @@ export const registerPromptsWithServer = (server: McpServer, log: Logger) => {
 
   server.server.setRequestHandler(ListPromptsRequestSchema, () => {
     const catalog = getPromptCatalog();
+    const promptSummaries: ListPromptsResult["prompts"] = catalog.map((entry) => ({
+      name: entry.name,
+      description: entry.description,
+      arguments: entry.arguments
+    }));
     log.info("prompt catalog requested", { promptCount: catalog.length });
     return {
-      prompts: catalog
-    } satisfies ListPromptsResult;
+      prompts: promptSummaries
+    };
   });
 
   server.server.setRequestHandler(GetPromptRequestSchema, (request) => {

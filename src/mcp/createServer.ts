@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
 import { registerToolsWithServer } from "./registerTools";
+import { registerPromptsWithServer } from "./registerPrompts";
 
 const SERVER_NAME = "todo-mcp";
 
@@ -19,5 +20,6 @@ export const createMcpServer = () => {
   );
 
   registerToolsWithServer(server);
+  registerPromptsWithServer(server);
   return server;
 };

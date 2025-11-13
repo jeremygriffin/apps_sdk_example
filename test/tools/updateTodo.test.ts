@@ -29,6 +29,44 @@ describe("update_todo tool", () => {
     expect(result.todo.status).toBe("in_progress");
   });
 
+  it("updates annotations when provided", async () => {
+    const result = await tool.handler(
+      {
+        todoId,
+        priority: 4,
+        complexity: 2,
+        marker: "triangle"
+      },
+      context
+    );
+    expect(result.todo.priority).toBe(4);
+    expect(result.todo.complexity).toBe(2);
+    expect(result.todo.marker).toBe("triangle");
+  });
+
+  it("validates annotation ranges and marker options", () => {
+    expect(() =>
+      tool.inputSchema.parse({
+        todoId,
+        priority: 9
+      })
+    ).toThrow();
+
+    expect(() =>
+      tool.inputSchema.parse({
+        todoId,
+        complexity: 0
+      })
+    ).toThrow();
+
+    expect(() =>
+      tool.inputSchema.parse({
+        todoId,
+        marker: "hexagon"
+      })
+    ).toThrow();
+  });
+
   it("requires at least one field", () => {
     expect(() => tool.inputSchema.parse({ todoId })).toThrow();
   });

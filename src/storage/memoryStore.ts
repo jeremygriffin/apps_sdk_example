@@ -114,6 +114,15 @@ export const createMemoryStore = (options: MemoryStoreOptions = {}): Store => {
       if (updates.status !== undefined) {
         todo.status = updates.status;
       }
+      if (updates.priority !== undefined) {
+        todo.priority = updates.priority;
+      }
+      if (updates.complexity !== undefined) {
+        todo.complexity = updates.complexity;
+      }
+      if (updates.marker !== undefined) {
+        todo.marker = updates.marker;
+      }
       todo.updatedAt = nowIsoString();
       logDebug(activeLogger, "store.updateTodo", {
         subject: maskSubjectId(subjectId),

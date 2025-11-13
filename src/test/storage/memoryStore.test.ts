@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { TodoNotFoundError } from "../../src/errors";
-import { createMemoryStore } from "../../src/storage/memoryStore";
+import { TodoNotFoundError } from "../../errors";
+import { createMemoryStore } from "../../storage/memoryStore";
 import { createSilentLogger } from "../helpers/logger";
 
 describe("memoryStore", () => {

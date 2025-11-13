@@ -1,4 +1,4 @@
-import { createLogger, Logger } from "../../src/logger";
+import { createLogger, Logger } from "../../logger";
 
 export const createSilentLogger = (): Logger => {
   const silentLogger = createLogger("emergency", () => {});

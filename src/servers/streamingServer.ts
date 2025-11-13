@@ -6,7 +6,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
 import { config } from "../config";
-import { logger } from "../logger";
+import { createLogger, logger as defaultLogger, Logger } from "../logger";
 import { createMcpServer } from "../mcp/createServer";
 import { readJsonBody } from "../utils/http";
 
@@ -14,6 +14,7 @@ export interface StreamingServerOptions {
   port?: number;
   host?: string;
   path?: string;
+  logger?: Logger;
 }
 
 interface StreamingSession {
@@ -55,6 +56,7 @@ export const startStreamingServer = (options: StreamingServerOptions = {}) => {
   const port = options.port ?? config.streaming.port;
   const host = options.host ?? config.streaming.host;
   const path = options.path ?? config.streaming.path;
+  const serverLogger = options.logger ?? defaultLogger;
 
   const sessions = new Map<string, StreamingSession>();
 
@@ -65,13 +67,13 @@ export const startStreamingServer = (options: StreamingServerOptions = {}) => {
     }
     session.closed = true;
     sessions.delete(sessionId);
-    logger.info("Streamable HTTP session closed", { sessionId });
+    serverLogger.info("Streamable HTTP session closed", { sessionId });
     try {
       if (closeTransport) {
         await session.transport.close();
       }
     } catch (error) {
-      logger.warn("failed to close transport", {
+      serverLogger.warn("failed to close transport", {
         sessionId,
         error: error instanceof Error ? error.message : String(error)
       });
@@ -79,7 +81,7 @@ export const startStreamingServer = (options: StreamingServerOptions = {}) => {
     try {
       await session.closeServer();
     } catch (error) {
-      logger.warn("failed to close MCP server", {
+      serverLogger.warn("failed to close MCP server", {
         sessionId,
         error: error instanceof Error ? error.message : String(error)
       });
@@ -123,13 +125,14 @@ export const startStreamingServer = (options: StreamingServerOptions = {}) => {
             onsessioninitialized: (sessionId) => {
               session.id = sessionId;
               sessions.set(sessionId, session);
-              logger.info("Streamable HTTP session initialized", { sessionId });
+              serverLogger.info("Streamable HTTP session initialized", { sessionId });
             },
             onsessionclosed: (sessionId) => {
               void cleanupSession(sessionId);
             }
           });
-          const mcpServer = createMcpServer();
+          const sessionLogger = createLogger(serverLogger.getLevel());
+          const mcpServer = createMcpServer({ logger: sessionLogger });
           const session: StreamingSession = {
             id: "",
             transport,
@@ -173,7 +176,7 @@ export const startStreamingServer = (options: StreamingServerOptions = {}) => {
 
       sendJson(res, 405, { ok: false, error: "Method not allowed" });
     } catch (error) {
-      logger.error("Streaming server error", {
+      serverLogger.error("Streaming server error", {
         error: error instanceof Error ? error.message : String(error)
       });
       if (!res.headersSent) {
@@ -190,7 +193,7 @@ export const startStreamingServer = (options: StreamingServerOptions = {}) => {
   });
 
   server.listen(port, host, () => {
-    logger.info("Streamable HTTP server listening", {
+    serverLogger.info("Streamable HTTP server listening", {
       host,
       port,
       path

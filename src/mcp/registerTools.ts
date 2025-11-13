@@ -5,7 +5,7 @@ import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/proto
 import type { ServerNotification, ServerRequest } from "@modelcontextprotocol/sdk/types.js";
 import { type ZodRawShape, type ZodTypeAny, ZodEffects, ZodObject } from "zod";
 
-import { logger } from "../logger";
+import { Logger } from "../logger";
 import { executeToolByName, tools } from "../toolRegistry";
 import type { ToolMetadata } from "../types/tool";
 
@@ -71,7 +71,7 @@ const normalizeSubjectId = (
   return undefined;
 };
 
-export const registerToolsWithServer = (server: McpServer) => {
+export const registerToolsWithServer = (server: McpServer, log: Logger) => {
   tools.forEach((tool) => {
     const inputShape = toRawShape(tool.inputSchema);
     const outputShape = toRawShape(tool.outputSchema);
@@ -92,7 +92,8 @@ export const registerToolsWithServer = (server: McpServer) => {
       try {
         const result = await executeToolByName(tool.name, args ?? {}, {
           metadata,
-          subjectId: subjectOverride
+          subjectId: subjectOverride,
+          logger: log
         });
         return {
           content: [
@@ -104,7 +105,7 @@ export const registerToolsWithServer = (server: McpServer) => {
           structuredContent: result
         };
       } catch (error) {
-        logger.error("mcp tool handler failed", {
+        log.error("mcp tool handler failed", {
           tool: tool.name,
           error: error instanceof Error ? error.message : String(error)
         });

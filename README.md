@@ -8,6 +8,7 @@ A TypeScript implementation of a Model Context Protocol–ready todo backend tha
 - Tool registry that centralizes validation, logging, and execution.
 - SSE adapter powered by `@modelcontextprotocol/sdk` that serves `/mcp/sse` (stream) and `/mcp/sse/messages` (JSON-RPC posts).
 - Streamable HTTP server that listens on `/mcp/stream` for POST/GET/DELETE per the MCP spec (ready for future realtime/WebRTC integration).
+- MCP logging capability with runtime level adjustments via `logging/setLevel` and streamed `notifications/message`.
 - Debug toggles via `LOG_LEVEL` and `DEBUG_TOOL_CALLS` plus masked logging helpers.
 
 ## Getting Started
@@ -35,6 +36,9 @@ Both transports share the same tool registry, schemas, and masked logging behavi
 
 ### Debug Mode
 Set `DEBUG_TOOL_CALLS=true` (or run `npm run debug-sse`) to log complete tool inputs/outputs, metadata, and store operations for local troubleshooting. Sensitive fields remain masked at info level per the spec.
+
+### MCP Logging
+The server advertises the MCP `logging` capability. Clients can call `logging/setLevel` with any syslog-compatible level (`debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`) to adjust the minimum severity streamed via `notifications/message`. All messages are structured JSON with masked subject identifiers, so no sensitive data leaks into logs even when verbose tracing is enabled.
 
 ## Testing
 ```bash

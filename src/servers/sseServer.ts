@@ -4,7 +4,7 @@ import { URL } from "node:url";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 
 import { config } from "../config";
-import { logger } from "../logger";
+import { createLogger, logger as defaultLogger, Logger } from "../logger";
 import { createMcpServer } from "../mcp/createServer";
 import { readJsonBody } from "../utils/http";
 
@@ -13,6 +13,7 @@ export interface SseServerOptions {
   host?: string;
   path?: string;
   messagePath?: string;
+  logger?: Logger;
 }
 
 interface SseSession {
@@ -41,6 +42,7 @@ export const startSseServer = (options: SseServerOptions = {}) => {
   const host = options.host ?? config.sse.host;
   const path = options.path ?? config.sse.path;
   const messagePath = options.messagePath ?? config.sse.messagePath;
+  const serverLogger = options.logger ?? defaultLogger;
 
   const sessions = new Map<string, SseSession>();
 
@@ -49,13 +51,14 @@ export const startSseServer = (options: SseServerOptions = {}) => {
 
     try {
       if (req.method === "GET" && url.pathname === path) {
-        const mcpServer = createMcpServer();
+        const sessionLogger = createLogger(serverLogger.getLevel());
+        const mcpServer = createMcpServer({ logger: sessionLogger });
         const transport = new SSEServerTransport(messagePath, res);
         const sessionId = transport.sessionId;
 
         const cleanup = async () => {
           sessions.delete(sessionId);
-          logger.info("SSE session closed", { sessionId });
+          serverLogger.info("SSE session closed", { sessionId });
           try {
             await mcpServer.close();
           } catch (error) {
@@ -69,7 +72,7 @@ export const startSseServer = (options: SseServerOptions = {}) => {
           void cleanup();
         };
         transport.onerror = (error) => {
-          logger.error("sse transport error", {
+          serverLogger.error("sse transport error", {
             sessionId,
             error: error instanceof Error ? error.message : String(error)
           });
@@ -81,7 +84,7 @@ export const startSseServer = (options: SseServerOptions = {}) => {
         });
 
         await mcpServer.connect(transport);
-        logger.info("SSE session established", { sessionId });
+        serverLogger.info("SSE session established", { sessionId });
         return;
       }
 
@@ -115,7 +118,7 @@ export const startSseServer = (options: SseServerOptions = {}) => {
 
       sendJson(res, 404, { ok: false, error: "Not Found" });
     } catch (error) {
-      logger.error("SSE server error", {
+      serverLogger.error("SSE server error", {
         error: error instanceof Error ? error.message : String(error)
       });
       if (!res.headersSent) {
@@ -132,7 +135,7 @@ export const startSseServer = (options: SseServerOptions = {}) => {
   });
 
   server.listen(port, host, () => {
-    logger.info("MCP SSE server listening", {
+    serverLogger.info("MCP SSE server listening", {
       host,
       port,
       path,

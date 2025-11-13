@@ -1,0 +1,210 @@
+:root {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  color: #0f172a;
+  background-color: #f8fafc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+#root {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.todo-shell {
+  width: min(960px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.todo-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.todo-header p {
+  margin: 4px 0 0;
+  color: #475569;
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 16px;
+  gap: 12px;
+}
+
+.stats-row button {
+  margin-left: auto;
+}
+
+button {
+  font: inherit;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+  transition: background 0.2s ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button.secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+form.new-todo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+form.new-todo input,
+form.new-todo textarea {
+  border: 1px solid #cbd5f5;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.todo-list {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.todo-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.todo-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.todo-item-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+.badge.done {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge.in_progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge.pending {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge.enrichment {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.error-banner {
+  border: 1px solid #fecdd3;
+  background: #fff1f2;
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notice-banner {
+  border: 1px solid #fde68a;
+  background: #fffbeb;
+  color: #92400e;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.inline-error {
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.bridge-badge {
+  font-size: 0.8rem;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 32px 0;
+  color: #475569;
+}
+
+.ai-details,
+.notes-panel {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.ai-links {
+  list-style: none;
+  padding-left: 16px;
+}
+
+.ai-links li a {
+  color: #2563eb;
+  text-decoration: none;
+}

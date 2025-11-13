@@ -22,11 +22,20 @@ npm run dev:ui     # run the ChatGPT-facing todo UI (Vite dev server)
 npm run build:ui   # build the UI for production
 ```
 
-Servers default to:
-- SSE stream: `GET http://localhost:8001/mcp/sse` (clients then `POST` JSON-RPC messages to `/mcp/sse/messages?sessionId=<id>`)
-- Streamable HTTP: `http://localhost:8101/mcp/stream` for POST/GET/DELETE as defined in the MCP spec
+The server now exposes both MCP transports on a single HTTP listener (default `http://localhost:3001`).
 
-You can customize ports/paths via environment variables (`SSE_PORT`, `SSE_PATH`, `STREAMING_PORT`, etc.).
+- SSE stream: `GET http://localhost:3001/mcp/sse` then `POST` JSON-RPC messages to `/mcp/sse/messages?sessionId=<id>`
+- Streamable HTTP: `http://localhost:3001/mcp/stream` for POST/GET/DELETE as defined in the MCP spec
+
+Configuration can be provided via `env.json` in the repository root or standard environment variables. Values from the shell override anything defined in `env.json`. Supported keys include `SERVER_HOST`, `SERVER_PORT`, `SSE_PATH`, `SSE_MESSAGE_PATH`, `STREAMING_PATH`, `LOG_LEVEL`, `DEBUG_TOOL_CALLS`, and `SUBJECT_METADATA_KEYS`.
+
+```json
+{
+  "SERVER_PORT": "3100",
+  "SERVER_HOST": "127.0.0.1",
+  "DEBUG_TOOL_CALLS": "true"
+}
+```
 
 ### Invoking Tools
 Use any MCP-compatible client (e.g., OpenAI Apps SDK) to connect via either:

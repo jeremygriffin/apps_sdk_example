@@ -15,7 +15,8 @@ export const config = {
   sse: {
     host: process.env.SSE_HOST ?? "0.0.0.0",
     port: parseNumber(process.env.SSE_PORT, 8001),
-    path: process.env.SSE_PATH ?? "/mcp/sse"
+    path: process.env.SSE_PATH ?? "/mcp/sse",
+    messagePath: process.env.SSE_MESSAGE_PATH ?? "/mcp/sse/messages"
   },
   streaming: {
     host: process.env.STREAMING_HOST ?? "0.0.0.0",

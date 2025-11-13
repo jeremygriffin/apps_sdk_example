@@ -1,0 +1,27 @@
+# Dependencies and caches
+node_modules/
+.pnpm-store/
+.npm/
+
+# Build outputs
+/dist/
+coverage/
+*.tsbuildinfo
+
+# Runtime artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Environment & secrets
+.env
+.env.*
+
+# Tooling metadata
+.vscode/
+.idea/
+.DS_Store
+
+# Misc
+/tmp/

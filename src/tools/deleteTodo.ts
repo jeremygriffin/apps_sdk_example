@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import { maskSubjectId } from "../logger";
-import { Store } from "../storage";
-import { ToolDefinition } from "../types/tool";
+import { maskSubjectId } from "@/logger";
+import { Store } from "@/storage";
+import { ToolDefinition } from "@/types/tool";
 
 const InputSchema = z.object({
   todoId: z.string().min(1, "todoId is required")

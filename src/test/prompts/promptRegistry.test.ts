@@ -7,7 +7,7 @@ import {
   PromptArgumentError,
   prompts,
   renderPromptMessage
-} from "../../prompts/promptRegistry";
+} from "@/prompts/promptRegistry";
 
 describe("prompt registry", () => {
   it("exposes all expected prompt names", () => {

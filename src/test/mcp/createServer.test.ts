@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { describe, expect, it, vi } from "vitest";
 
-import { createLogger } from "../../logger";
-import { wireLoggingCapability } from "../../mcp/createServer";
+import { createLogger } from "@/logger";
+import { wireLoggingCapability } from "@/mcp/createServer";
 
 const createStubServer = () => {
   let handler: ((request: { params: { level: string } }) => Promise<unknown> | unknown) | undefined;

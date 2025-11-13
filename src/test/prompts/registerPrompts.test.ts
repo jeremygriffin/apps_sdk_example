@@ -1,8 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { describe, expect, it } from "vitest";
 
-import { registerPromptsWithServer } from "../../mcp/registerPrompts";
-import { prompts } from "../../prompts/promptRegistry";
+import { registerPromptsWithServer } from "@/mcp/registerPrompts";
+import { prompts } from "@/prompts/promptRegistry";
 import { createSilentLogger } from "../helpers/logger";
 
 describe("registerPromptsWithServer", () => {

@@ -1,6 +1,6 @@
 import { z, ZodTypeAny } from "zod";
 
-import { Logger } from "../logger";
+import { Logger } from "@/logger";
 
 export interface ToolContext {
   subjectId: string;

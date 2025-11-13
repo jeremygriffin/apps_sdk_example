@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ErrorCode, McpError, SetLevelRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 
-import { isLogLevel, logger as defaultLogger, Logger } from "../logger";
+import { isLogLevel, logger as defaultLogger, Logger } from "@/logger";
 import { registerToolsWithServer } from "./registerTools";
 import { registerPromptsWithServer } from "./registerPrompts";
 

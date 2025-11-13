@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { createListTodosTool } from "../../tools/listTodos";
+import { createListTodosTool } from "@/tools/listTodos";
 import { createTestContext, createTestStore, TEST_SUBJECT_ID } from "../helpers/toolkit";
 
 describe("list_todos tool", () => {

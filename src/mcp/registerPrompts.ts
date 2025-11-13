@@ -9,7 +9,7 @@ import {
   PromptMessage as McpPromptMessage
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { Logger } from "../logger";
+import { Logger } from "@/logger";
 import {
   getPromptByName,
   getPromptCatalog,
@@ -17,7 +17,7 @@ import {
   PromptArgumentError,
   PromptMessage,
   renderPromptMessage
-} from "../prompts/promptRegistry";
+} from "@/prompts/promptRegistry";
 
 const toMcpMessage = (
   template: PromptMessage,

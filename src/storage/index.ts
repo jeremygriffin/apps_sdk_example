@@ -1,5 +1,5 @@
-import { Logger } from "../logger";
-import { AiLink, Todo, TodoUpdateFields } from "../types/todo";
+import { Logger } from "@/logger";
+import { AiLink, Todo, TodoUpdateFields } from "@/types/todo";
 
 export interface Store {
   getTodosBySubject(subjectId: string, logger?: Logger): Promise<Todo[]>;

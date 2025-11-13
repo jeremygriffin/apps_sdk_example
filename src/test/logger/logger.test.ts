@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createLogger, LogLevel, maskSubjectId } from "../../logger";
+import { createLogger, LogLevel, maskSubjectId } from "@/logger";
 
 describe("logger", () => {
   it("filters messages below the configured level", () => {

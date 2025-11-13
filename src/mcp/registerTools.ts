@@ -5,9 +5,9 @@ import type { RequestHandlerExtra } from "@modelcontextprotocol/sdk/shared/proto
 import type { ServerNotification, ServerRequest } from "@modelcontextprotocol/sdk/types.js";
 import { type ZodRawShape, type ZodTypeAny, ZodEffects, ZodObject } from "zod";
 
-import { Logger } from "../logger";
-import { executeToolByName, tools } from "../toolRegistry";
-import type { ToolMetadata } from "../types/tool";
+import { Logger } from "@/logger";
+import { executeToolByName, tools } from "@/toolRegistry";
+import type { ToolMetadata } from "@/types/tool";
 
 const SUBJECT_HEADER_CANDIDATES = ["x-openai-subject", "x-subject-id", "openai-subject"];
 

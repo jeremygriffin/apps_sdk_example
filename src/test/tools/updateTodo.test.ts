@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { TodoNotFoundError } from "../../errors";
-import { createUpdateTodoTool } from "../../tools/updateTodo";
+import { TodoNotFoundError } from "@/errors";
+import { createUpdateTodoTool } from "@/tools/updateTodo";
 import { createTestContext, createTestStore } from "../helpers/toolkit";
 
 describe("update_todo tool", () => {

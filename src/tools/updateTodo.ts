@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import { maskSubjectId } from "../logger";
-import { Store } from "../storage";
-import { TodoMarkerSchema, TodoSchema } from "../types/todo";
-import { ToolDefinition } from "../types/tool";
+import { maskSubjectId } from "@/logger";
+import { Store } from "@/storage";
+import { TodoMarkerSchema, TodoSchema } from "@/types/todo";
+import { ToolDefinition } from "@/types/tool";
 
 const InputSchema = z
   .object({

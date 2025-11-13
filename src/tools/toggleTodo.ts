@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { logger, maskSubjectId } from "../logger";
+import { maskSubjectId } from "../logger";
 import { Store } from "../storage";
 import { TodoSchema } from "../types/todo";
 import { ToolDefinition } from "../types/tool";
@@ -21,8 +21,8 @@ export const createToggleTodoTool = (
   inputSchema: InputSchema,
   outputSchema: OutputSchema,
   handler: async (input, ctx) => {
-    const todo = await store.toggleTodoStatus(ctx.subjectId, input.todoId);
-    logger.info("toggle_todo updated", {
+    const todo = await store.toggleTodoStatus(ctx.subjectId, input.todoId, ctx.logger);
+    ctx.logger.info("toggle_todo updated", {
       subject: maskSubjectId(ctx.subjectId),
       todoId: todo.id,
       status: todo.status

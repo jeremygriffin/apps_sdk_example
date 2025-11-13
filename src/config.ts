@@ -1,4 +1,30 @@
-export type LogLevelName = "error" | "warn" | "info" | "debug";
+export type LogLevelName =
+  | "debug"
+  | "info"
+  | "notice"
+  | "warning"
+  | "error"
+  | "critical"
+  | "alert"
+  | "emergency";
+
+const LOG_LEVELS: LogLevelName[] = [
+  "debug",
+  "info",
+  "notice",
+  "warning",
+  "error",
+  "critical",
+  "alert",
+  "emergency"
+];
+
+const normalizeLogLevel = (value: string | undefined): LogLevelName => {
+  if (!value) {
+    return "info";
+  }
+  return LOG_LEVELS.includes(value as LogLevelName) ? (value as LogLevelName) : "info";
+};
 
 const parseNumber = (value: string | undefined, fallback: number): number => {
   if (!value) return fallback;
@@ -9,7 +35,7 @@ const parseNumber = (value: string | undefined, fallback: number): number => {
 const rawSubjectKeys = process.env.SUBJECT_METADATA_KEYS ?? "openai/subject,subjectId";
 
 export const config = {
-  logLevel: (process.env.LOG_LEVEL as LogLevelName | undefined) ?? "info",
+  logLevel: normalizeLogLevel(process.env.LOG_LEVEL),
   debugToolCalls: process.env.DEBUG_TOOL_CALLS === "true",
   nodeEnv: process.env.NODE_ENV ?? "development",
   sse: {

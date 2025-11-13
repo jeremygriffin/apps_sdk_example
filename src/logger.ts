@@ -1,96 +1,150 @@
 import { config, LogLevelName } from "./config";
 
-export interface LogContext {
+export type LogLevel = LogLevelName;
+
+export interface LogData {
   [key: string]: unknown;
 }
 
-export interface LogEntry {
-  level: LogLevelName;
-  message: string;
-  context?: LogContext;
+export interface LogEvent {
+  timestamp: string;
+  level: LogLevel;
+  logger: string;
+  data?: LogData;
 }
 
-export type LogSink = (entry: LogEntry) => void;
+export type LoggerSink = (event: LogEvent) => void;
 
-const levelWeights: Record<LogLevelName, number> = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  debug: 3
+const LOG_LEVEL_ORDER: LogLevel[] = [
+  "debug",
+  "info",
+  "notice",
+  "warning",
+  "error",
+  "critical",
+  "alert",
+  "emergency"
+];
+
+const LEVEL_WEIGHT: Record<LogLevel, number> = LOG_LEVEL_ORDER.reduce(
+  (acc, level, index) => {
+    acc[level] = index;
+    return acc;
+  },
+  {} as Record<LogLevel, number>
+);
+
+const pickConsoleMethod = (level: LogLevel): keyof Console => {
+  if (level === "warning" || level === "notice") {
+    return "warn";
+  }
+  if (level === "error" || level === "critical" || level === "alert" || level === "emergency") {
+    return "error";
+  }
+  if (level === "debug") {
+    return "debug";
+  }
+  return "info";
 };
 
-const isLevelEnabled = (target: LogLevelName, configured: LogLevelName): boolean =>
-  levelWeights[target] <= levelWeights[configured];
-
-const safeContextString = (context?: LogContext): string => {
-  if (!context || Object.keys(context).length === 0) {
-    return "";
-  }
-  try {
-    return ` ${JSON.stringify(context)}`;
-  } catch {
-    return " [unserializable-context]";
-  }
-};
-
-const defaultSink: LogSink = ({ level, message, context }) => {
-  const ctxString = safeContextString(context);
-  const formatted = `[${level.toUpperCase()}] ${message}${ctxString}`;
-  const method = level === "debug" ? "debug" : level === "warn" ? "warn" : level === "error" ? "error" : "info";
+const defaultSink: LoggerSink = (event) => {
+  const method = pickConsoleMethod(event.level);
   // eslint-disable-next-line no-console
-  (console as Console)[method](formatted);
+  console[method](JSON.stringify(event));
+};
+
+const isLevelEnabled = (target: LogLevel, configured: LogLevel): boolean =>
+  LEVEL_WEIGHT[target] >= LEVEL_WEIGHT[configured];
+
+export const isLogLevel = (value: unknown): value is LogLevel =>
+  typeof value === "string" && (value as string) in LEVEL_WEIGHT;
+
+const assertLogLevel = (value: unknown): LogLevel => {
+  if (!isLogLevel(value)) {
+    throw new Error(`Unsupported log level: ${String(value)}`);
+  }
+  return value;
 };
 
 export interface Logger {
-  level: LogLevelName;
-  error: (message: string, context?: LogContext) => void;
-  warn: (message: string, context?: LogContext) => void;
-  info: (message: string, context?: LogContext) => void;
-  debug: (message: string, context?: LogContext) => void;
-  isLevelEnabled: (level: LogLevelName) => boolean;
+  getLevel: () => LogLevel;
+  setLevel: (level: LogLevel) => void;
+  log: (level: LogLevel, loggerName: string, data?: LogData) => void;
+  debug: (loggerName: string, data?: LogData) => void;
+  info: (loggerName: string, data?: LogData) => void;
+  notice: (loggerName: string, data?: LogData) => void;
+  warn: (loggerName: string, data?: LogData) => void;
+  warning: (loggerName: string, data?: LogData) => void;
+  error: (loggerName: string, data?: LogData) => void;
+  critical: (loggerName: string, data?: LogData) => void;
+  alert: (loggerName: string, data?: LogData) => void;
+  emergency: (loggerName: string, data?: LogData) => void;
+  sendLogMessage: (level: LogLevel, loggerName: string, data?: LogData) => void;
 }
 
-export interface LoggerOptions {
-  level?: LogLevelName;
-  sink?: LogSink;
-  name?: string;
-}
-
-export const createLogger = (options: LoggerOptions = {}): Logger => {
-  const level = options.level ?? config.logLevel;
-  const sink = options.sink ?? defaultSink;
-  const log = (entryLevel: LogLevelName, message: string, context?: LogContext) => {
-    if (!isLevelEnabled(entryLevel, level)) {
-      return;
-    }
-    const fullContext = options.name
-      ? {
-          ...context,
-          logger: options.name
-        }
-      : context;
-    try {
-      sink({ level: entryLevel, message, context: fullContext });
-    } catch (error) {
-      defaultSink({
+const safeInvoke = (fn: () => void) => {
+  try {
+    fn();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
         level: "error",
-        message: `Logger sink failure: ${(error as Error).message}`,
-        context: { logger: options.name ?? "todo-mcp" }
-      });
-    }
-  };
-
-  return {
-    level,
-    error: (message, context) => log("error", message, context),
-    warn: (message, context) => log("warn", message, context),
-    info: (message, context) => log("info", message, context),
-    debug: (message, context) => log("debug", message, context),
-    isLevelEnabled: (entryLevel) => isLevelEnabled(entryLevel, level)
-  };
+        logger: "logger",
+        data: {
+          error: error instanceof Error ? error.message : String(error)
+        }
+      })
+    );
+  }
 };
 
-export const shouldDebugToolCalls = (): boolean => config.debugToolCalls;
+export const createLogger = (
+  initialLevel: LogLevel = "info",
+  sink: LoggerSink = defaultSink
+): Logger => {
+  let currentLevel = assertLogLevel(initialLevel);
+
+  const logImpl = (level: LogLevel, loggerName: string, data?: LogData) => {
+    if (!isLevelEnabled(level, currentLevel)) {
+      return;
+    }
+    const event: LogEvent = {
+      timestamp: new Date().toISOString(),
+      level,
+      logger: loggerName,
+      data
+    };
+    safeInvoke(() => sink(event));
+    safeInvoke(() => loggerInstance.sendLogMessage(level, loggerName, data));
+  };
+
+  const loggerInstance: Logger = {
+    getLevel: () => currentLevel,
+    setLevel: (level: LogLevel) => {
+      currentLevel = assertLogLevel(level);
+    },
+    log: logImpl,
+    debug: (loggerName, data) => logImpl("debug", loggerName, data),
+    info: (loggerName, data) => logImpl("info", loggerName, data),
+    notice: (loggerName, data) => logImpl("notice", loggerName, data),
+    warn: (loggerName, data) => logImpl("warning", loggerName, data),
+    warning: (loggerName, data) => logImpl("warning", loggerName, data),
+    error: (loggerName, data) => logImpl("error", loggerName, data),
+    critical: (loggerName, data) => logImpl("critical", loggerName, data),
+    alert: (loggerName, data) => logImpl("alert", loggerName, data),
+    emergency: (loggerName, data) => logImpl("emergency", loggerName, data),
+    sendLogMessage: () => {}
+  };
+
+  return loggerInstance;
+};
+
+export const logger = createLogger(config.logLevel);
+
+export const shouldDebugToolCalls = (activeLogger: Logger | undefined = logger): boolean =>
+  config.debugToolCalls || activeLogger.getLevel() === "debug";
 
 export const maskSubjectId = (subjectId?: string | null): string => {
   if (!subjectId) {
@@ -104,5 +158,3 @@ export const maskSubjectId = (subjectId?: string | null): string => {
   const suffix = trimmed.slice(-4);
   return `${prefix}...${suffix}`;
 };
-
-export const logger = createLogger({ name: "todo-mcp" });

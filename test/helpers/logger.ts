@@ -1,10 +1,7 @@
-import { Logger } from "../../src/logger";
+import { createLogger, Logger } from "../../src/logger";
 
-export const createSilentLogger = (): Logger => ({
-  level: "error",
-  error: () => {},
-  warn: () => {},
-  info: () => {},
-  debug: () => {},
-  isLevelEnabled: () => false
-});
+export const createSilentLogger = (): Logger => {
+  const silentLogger = createLogger("emergency", () => {});
+  silentLogger.sendLogMessage = () => {};
+  return silentLogger;
+};

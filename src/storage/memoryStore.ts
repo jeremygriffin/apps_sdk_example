@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { TodoNotFoundError } from "../errors";
-import { logger, Logger, maskSubjectId } from "../logger";
+import { logger as defaultLogger, Logger, maskSubjectId } from "../logger";
 import { nowIsoString } from "../utils/datetime";
 import { AiLink, Todo, TodoUpdateFields } from "../types/todo";
 import { Store } from "./index";
@@ -16,7 +16,7 @@ const cloneTodo = (todo: Todo): Todo => JSON.parse(JSON.stringify(todo));
 
 export const createMemoryStore = (options: MemoryStoreOptions = {}): Store => {
   const subjects: SubjectMap = new Map();
-  const log = options.log ?? logger;
+  const fallbackLogger = options.log ?? defaultLogger;
 
   const ensureSubjectStore = (subjectId: string): Map<string, Todo> => {
     if (!subjects.has(subjectId)) {
@@ -34,27 +34,37 @@ export const createMemoryStore = (options: MemoryStoreOptions = {}): Store => {
     return todo;
   };
 
-  const logDebug = (message: string, context: Record<string, unknown>) => {
-    log.debug(message, context);
+  const resolveLogger = (candidate?: Logger) => candidate ?? fallbackLogger;
+
+  const logDebug = (
+    activeLogger: Logger | undefined,
+    message: string,
+    context: Record<string, unknown>
+  ) => {
+    resolveLogger(activeLogger).debug(message, context);
   };
 
   return {
-    async getTodosBySubject(subjectId: string): Promise<Todo[]> {
+    async getTodosBySubject(subjectId: string, activeLogger?: Logger): Promise<Todo[]> {
       const subjectStore = ensureSubjectStore(subjectId);
       const todos = Array.from(subjectStore.values()).sort((a, b) =>
         a.createdAt.localeCompare(b.createdAt)
       );
-      logDebug("getTodosBySubject", {
+      logDebug(activeLogger, "store.getTodosBySubject", {
         subject: maskSubjectId(subjectId),
         count: todos.length
       });
       return todos.map(cloneTodo);
     },
 
-    async getTodoById(subjectId: string, todoId: string): Promise<Todo | null> {
+    async getTodoById(
+      subjectId: string,
+      todoId: string,
+      activeLogger?: Logger
+    ): Promise<Todo | null> {
       const subjectStore = ensureSubjectStore(subjectId);
       const todo = subjectStore.get(todoId) ?? null;
-      logDebug("getTodoById", {
+      logDebug(activeLogger, "store.getTodoById", {
         subject: maskSubjectId(subjectId),
         todoId,
         found: Boolean(todo)
@@ -62,7 +72,11 @@ export const createMemoryStore = (options: MemoryStoreOptions = {}): Store => {
       return todo ? cloneTodo(todo) : null;
     },
 
-    async createTodo(subjectId: string, data: { title: string; notes?: string }): Promise<Todo> {
+    async createTodo(
+      subjectId: string,
+      data: { title: string; notes?: string },
+      activeLogger?: Logger
+    ): Promise<Todo> {
       const subjectStore = ensureSubjectStore(subjectId);
       const id = randomUUID();
       const timestamp = nowIsoString();
@@ -77,14 +91,19 @@ export const createMemoryStore = (options: MemoryStoreOptions = {}): Store => {
         aiEnrichmentStatus: "not_started"
       };
       subjectStore.set(id, todo);
-      logDebug("createTodo", {
+      logDebug(activeLogger, "store.createTodo", {
         subject: maskSubjectId(subjectId),
         todoId: id
       });
       return cloneTodo(todo);
     },
 
-    async updateTodo(subjectId: string, todoId: string, updates: TodoUpdateFields): Promise<Todo> {
+    async updateTodo(
+      subjectId: string,
+      todoId: string,
+      updates: TodoUpdateFields,
+      activeLogger?: Logger
+    ): Promise<Todo> {
       const todo = findTodoOrThrow(subjectId, todoId);
       if (updates.title !== undefined) {
         todo.title = updates.title;
@@ -96,29 +115,37 @@ export const createMemoryStore = (options: MemoryStoreOptions = {}): Store => {
         todo.status = updates.status;
       }
       todo.updatedAt = nowIsoString();
-      logDebug("updateTodo", {
+      logDebug(activeLogger, "store.updateTodo", {
         subject: maskSubjectId(subjectId),
         todoId
       });
       return cloneTodo(todo);
     },
 
-    async deleteTodo(subjectId: string, todoId: string): Promise<void> {
+    async deleteTodo(
+      subjectId: string,
+      todoId: string,
+      activeLogger?: Logger
+    ): Promise<void> {
       const subjectStore = ensureSubjectStore(subjectId);
       if (!subjectStore.delete(todoId)) {
         throw new TodoNotFoundError(subjectId, todoId);
       }
-      logDebug("deleteTodo", {
+      logDebug(activeLogger, "store.deleteTodo", {
         subject: maskSubjectId(subjectId),
         todoId
       });
     },
 
-    async toggleTodoStatus(subjectId: string, todoId: string): Promise<Todo> {
+    async toggleTodoStatus(
+      subjectId: string,
+      todoId: string,
+      activeLogger?: Logger
+    ): Promise<Todo> {
       const todo = findTodoOrThrow(subjectId, todoId);
       todo.status = todo.status === "done" ? "pending" : "done";
       todo.updatedAt = nowIsoString();
-      logDebug("toggleTodoStatus", {
+      logDebug(activeLogger, "store.toggleTodoStatus", {
         subject: maskSubjectId(subjectId),
         todoId,
         status: todo.status
@@ -134,7 +161,8 @@ export const createMemoryStore = (options: MemoryStoreOptions = {}): Store => {
         summary?: string;
         links?: AiLink[];
         lastRunAt?: string;
-      }
+      },
+      activeLogger?: Logger
     ): Promise<Todo> {
       const todo = findTodoOrThrow(subjectId, todoId);
       todo.aiEnrichmentStatus = enrichment.status;
@@ -142,7 +170,7 @@ export const createMemoryStore = (options: MemoryStoreOptions = {}): Store => {
       todo.aiLinks = enrichment.links;
       todo.aiLastRunAt = enrichment.lastRunAt;
       todo.updatedAt = nowIsoString();
-      logDebug("updateTodoEnrichment", {
+      logDebug(activeLogger, "store.updateTodoEnrichment", {
         subject: maskSubjectId(subjectId),
         todoId,
         status: enrichment.status

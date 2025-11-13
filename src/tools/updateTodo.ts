@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { logger, maskSubjectId } from "../logger";
+import { maskSubjectId } from "../logger";
 import { Store } from "../storage";
 import { TodoSchema } from "../types/todo";
 import { ToolDefinition } from "../types/tool";
@@ -32,12 +32,17 @@ export const createUpdateTodoTool = (
   outputSchema: OutputSchema,
   handler: async (input, ctx) => {
     const { todoId, title, notes, status } = input;
-    const todo = await store.updateTodo(ctx.subjectId, todoId, {
-      title,
-      notes,
-      status
-    });
-    logger.info("update_todo applied", {
+    const todo = await store.updateTodo(
+      ctx.subjectId,
+      todoId,
+      {
+        title,
+        notes,
+        status
+      },
+      ctx.logger
+    );
+    ctx.logger.info("update_todo applied", {
       subject: maskSubjectId(ctx.subjectId),
       todoId: todo.id,
       status: todo.status

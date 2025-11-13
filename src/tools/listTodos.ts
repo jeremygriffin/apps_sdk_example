@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { logger, maskSubjectId, shouldDebugToolCalls } from "../logger";
+import { maskSubjectId, shouldDebugToolCalls } from "../logger";
 import { Store } from "../storage";
 import { TodoSchema } from "../types/todo";
 import { ToolDefinition } from "../types/tool";
@@ -18,14 +18,14 @@ export const createListTodosTool = (
   inputSchema: InputSchema,
   outputSchema: OutputSchema,
   handler: async (_input, ctx) => {
-    const todos = await store.getTodosBySubject(ctx.subjectId);
-    if (shouldDebugToolCalls()) {
-      logger.debug("list_todos payload", {
+    const todos = await store.getTodosBySubject(ctx.subjectId, ctx.logger);
+    if (shouldDebugToolCalls(ctx.logger)) {
+      ctx.logger.debug("list_todos payload", {
         subject: maskSubjectId(ctx.subjectId),
         todos
       });
     } else {
-      logger.info("list_todos invoked", {
+      ctx.logger.info("list_todos invoked", {
         subject: maskSubjectId(ctx.subjectId),
         count: todos.length
       });

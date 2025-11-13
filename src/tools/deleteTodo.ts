@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { logger, maskSubjectId } from "../logger";
+import { maskSubjectId } from "../logger";
 import { Store } from "../storage";
 import { ToolDefinition } from "../types/tool";
 
@@ -20,8 +20,8 @@ export const createDeleteTodoTool = (
   inputSchema: InputSchema,
   outputSchema: OutputSchema,
   handler: async (input, ctx) => {
-    await store.deleteTodo(ctx.subjectId, input.todoId);
-    logger.info("delete_todo removed", {
+    await store.deleteTodo(ctx.subjectId, input.todoId, ctx.logger);
+    ctx.logger.info("delete_todo removed", {
       subject: maskSubjectId(ctx.subjectId),
       todoId: input.todoId
     });

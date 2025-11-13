@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { TodoNotFoundError } from "../errors";
-import { logger, maskSubjectId, shouldDebugToolCalls } from "../logger";
+import { maskSubjectId, shouldDebugToolCalls } from "../logger";
 import { Store } from "../storage";
 import { TodoSchema } from "../types/todo";
 import { ToolDefinition } from "../types/tool";
@@ -35,24 +35,29 @@ export const createEnrichTodoTool = (
   inputSchema: InputSchema,
   outputSchema: OutputSchema,
   handler: async (input, ctx) => {
-    const existing = await store.getTodoById(ctx.subjectId, input.todoId);
+    const existing = await store.getTodoById(ctx.subjectId, input.todoId, ctx.logger);
     if (!existing) {
       throw new TodoNotFoundError(ctx.subjectId, input.todoId);
     }
     const runAt = nowIsoString();
     const summary = `This is a simulated summary for: ${existing.title}`;
-    const todo = await store.updateTodoEnrichment(ctx.subjectId, input.todoId, {
-      status: "complete",
-      summary,
-      links: buildLinks(existing.title),
-      lastRunAt: runAt
-    });
-    logger.info("enrich_todo completed", {
+    const todo = await store.updateTodoEnrichment(
+      ctx.subjectId,
+      input.todoId,
+      {
+        status: "complete",
+        summary,
+        links: buildLinks(existing.title),
+        lastRunAt: runAt
+      },
+      ctx.logger
+    );
+    ctx.logger.info("enrich_todo completed", {
       subject: maskSubjectId(ctx.subjectId),
       todoId: todo.id
     });
-    if (shouldDebugToolCalls()) {
-      logger.debug("enrich_todo payload", {
+    if (shouldDebugToolCalls(ctx.logger)) {
+      ctx.logger.debug("enrich_todo payload", {
         subject: maskSubjectId(ctx.subjectId),
         todo
       });

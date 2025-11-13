@@ -1,19 +1,22 @@
+import { Logger } from "../logger";
 import { AiLink, Todo, TodoUpdateFields } from "../types/todo";
 
 export interface Store {
-  getTodosBySubject(subjectId: string): Promise<Todo[]>;
-  getTodoById(subjectId: string, todoId: string): Promise<Todo | null>;
+  getTodosBySubject(subjectId: string, logger?: Logger): Promise<Todo[]>;
+  getTodoById(subjectId: string, todoId: string, logger?: Logger): Promise<Todo | null>;
   createTodo(
     subjectId: string,
-    data: { title: string; notes?: string }
+    data: { title: string; notes?: string },
+    logger?: Logger
   ): Promise<Todo>;
   updateTodo(
     subjectId: string,
     todoId: string,
-    updates: TodoUpdateFields
+    updates: TodoUpdateFields,
+    logger?: Logger
   ): Promise<Todo>;
-  deleteTodo(subjectId: string, todoId: string): Promise<void>;
-  toggleTodoStatus(subjectId: string, todoId: string): Promise<Todo>;
+  deleteTodo(subjectId: string, todoId: string, logger?: Logger): Promise<void>;
+  toggleTodoStatus(subjectId: string, todoId: string, logger?: Logger): Promise<Todo>;
   updateTodoEnrichment(
     subjectId: string,
     todoId: string,
@@ -22,7 +25,8 @@ export interface Store {
       summary?: string;
       links?: AiLink[];
       lastRunAt?: string;
-    }
+    },
+    logger?: Logger
   ): Promise<Todo>;
 }
 

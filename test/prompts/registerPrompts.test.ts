@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { registerPromptsWithServer } from "../../src/mcp/registerPrompts";
 import { prompts } from "../../src/prompts/promptRegistry";
+import { createSilentLogger } from "../helpers/logger";
 
 describe("registerPromptsWithServer", () => {
   const createServer = () =>
@@ -22,7 +23,7 @@ describe("registerPromptsWithServer", () => {
 
   it("registers prompt capabilities and handlers", async () => {
     const server = createServer();
-    registerPromptsWithServer(server);
+    registerPromptsWithServer(server, createSilentLogger());
 
     const capabilities = server.server.getCapabilities();
     expect(capabilities.prompts).toEqual({});

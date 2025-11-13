@@ -9,7 +9,7 @@ import {
   PromptMessage as McpPromptMessage
 } from "@modelcontextprotocol/sdk/types.js";
 
-import { logger } from "../logger";
+import { Logger } from "../logger";
 import {
   getPromptByName,
   getPromptCatalog,
@@ -30,7 +30,7 @@ const toMcpMessage = (
   }
 });
 
-export const registerPromptsWithServer = (server: McpServer) => {
+export const registerPromptsWithServer = (server: McpServer, log: Logger) => {
   server.server.assertCanSetRequestHandler(ListPromptsRequestSchema.shape.method.value);
   server.server.assertCanSetRequestHandler(GetPromptRequestSchema.shape.method.value);
 
@@ -40,7 +40,7 @@ export const registerPromptsWithServer = (server: McpServer) => {
 
   server.server.setRequestHandler(ListPromptsRequestSchema, () => {
     const catalog = getPromptCatalog();
-    logger.info("prompt catalog requested", { promptCount: catalog.length });
+    log.info("prompt catalog requested", { promptCount: catalog.length });
     return {
       prompts: catalog
     } satisfies ListPromptsResult;
@@ -63,7 +63,7 @@ export const registerPromptsWithServer = (server: McpServer) => {
     }
 
     const messages = prompt.messages.map((message) => toMcpMessage(message, args));
-    logger.info("prompt template rendered", { prompt: prompt.name });
+    log.info("prompt template rendered", { prompt: prompt.name });
 
     return {
       description: prompt.description,

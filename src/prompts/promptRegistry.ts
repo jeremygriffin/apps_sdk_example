@@ -121,7 +121,7 @@ export const prompts: PromptDefinition[] = PromptCatalogSchema.parse([
       {
         name: "todosJson",
         description:
-          "JSON array of todos retrieved from list_todos. Includes status, notes, and metadata.",
+          "JSON array of todos retrieved from list_todos. Includes status, notes, and metadata. Example: [{\"id\":\"todo-1\",\"title\":\"Draft plan\",\"status\":\"pending\",\"notes\":\"optional context\"}]",
         required: true,
         type: "string"
       },
@@ -153,7 +153,7 @@ export const prompts: PromptDefinition[] = PromptCatalogSchema.parse([
       {
         name: "todosJson",
         description:
-          "JSON array of todos with annotations (priority 1-5, complexity 1-3, marker circle/triangle/square/diamond).",
+          "JSON array of todos with annotations (priority 1-5, complexity 1-3, marker circle/triangle/square/diamond). Example: [{\"id\":\"todo-2\",\"title\":\"Prep report\",\"priority\":4,\"complexity\":2,\"marker\":\"triangle\"}]",
         required: true,
         type: "string"
       },
@@ -186,7 +186,7 @@ export const prompts: PromptDefinition[] = PromptCatalogSchema.parse([
       {
         name: "todosJson",
         description:
-          "JSON array of todos with priority, complexity, and marker annotations to analyze.",
+          "JSON array of todos with priority, complexity, and marker annotations to analyze. Example: [{\"id\":\"todo-7\",\"title\":\"Refactor auth\",\"priority\":5,\"complexity\":3,\"marker\":\"diamond\"}]",
         required: true,
         type: "string"
       }

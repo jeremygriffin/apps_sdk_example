@@ -18,6 +18,8 @@ npm start          # start both SSE and streaming entrypoints
 npm run sse        # start only the SSE adapter
 npm run streaming  # start only the streamable HTTP server
 npm run debug-sse  # start SSE adapter with verbose debug logging
+npm run dev:ui     # run the ChatGPT-facing todo UI (Vite dev server)
+npm run build:ui   # build the UI for production
 ```
 
 Servers default to:
@@ -48,3 +50,9 @@ npm run typecheck
 ```
 
 Tests cover the storage layer, logging utility, and every tool handler to guard against regressions.
+
+## Todo UI (ChatGPT Apps SDK)
+
+The `packages/todo-ui` directory contains the React + Vite UI that renders inside ChatGPT. It communicates solely through `window.openai.callTool` and handles structured logging plus a local development shim. Use the scripts above (`npm run dev:ui`, `npm run build:ui`, `npm run preview:ui`) to work on the frontend locally.
+
+Debug logging for the UI can be enabled by appending `?debug=1` to the iframe URL or by running `localStorage.setItem("todo-ui-debug", "1")`. When debug mode is enabled, the UI surfaces bridge diagnostics, tool-call traces, and optional error details.

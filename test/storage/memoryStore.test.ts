@@ -1,23 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { TodoNotFoundError } from "../../src/errors";
-import { Logger } from "../../src/logger";
 import { createMemoryStore } from "../../src/storage/memoryStore";
-
-const silentLogger: Logger = {
-  level: "error",
-  error: () => {},
-  warn: () => {},
-  info: () => {},
-  debug: () => {},
-  isLevelEnabled: () => false
-};
+import { createSilentLogger } from "../helpers/logger";
 
 describe("memoryStore", () => {
-  let store = createMemoryStore({ log: silentLogger });
+  let store = createMemoryStore({ log: createSilentLogger() });
 
   beforeEach(() => {
-    store = createMemoryStore({ log: silentLogger });
+    store = createMemoryStore({ log: createSilentLogger() });
   });
 
   it("isolates todos by subject", async () => {

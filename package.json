@@ -11,8 +11,8 @@
     "sse": "tsx src/index.sse.ts",
     "streaming": "tsx src/index.streaming.ts",
     "debug-sse": "LOG_LEVEL=debug DEBUG_TOOL_CALLS=true NODE_ENV=development tsx src/index.sse.ts",
-    "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest --passWithNoTests",
+    "test": "LOG_LEVEL=error vitest run --passWithNoTests",
+    "test:watch": "LOG_LEVEL=error vitest --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],

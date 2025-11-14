@@ -1,5 +1,6 @@
 import http from "node:http";
 import { randomUUID } from "node:crypto";
+import { performance } from "node:perf_hooks";
 import { URL } from "node:url";
 
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
@@ -7,9 +8,9 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
 import { config } from "@/config";
-import { createLogger, logger as defaultLogger, Logger } from "@/logger";
+import { createLogger, logger as defaultLogger, Logger, shouldDebugToolCalls } from "@/logger";
 import { createMcpServer } from "@/mcp/createServer";
-import { readJsonBody } from "@/utils/http";
+import { readJsonBody, sanitizeHeaders } from "@/utils/http";
 
 export interface UnifiedServerOptions {
   host?: string;
@@ -58,6 +59,19 @@ const getSessionIdHeader = (req: http.IncomingMessage): string | undefined => {
     return entry?.trim();
   }
   return undefined;
+};
+
+const getQueryParams = (searchParams: URLSearchParams): Record<string, string | string[]> => {
+  const params: Record<string, string | string[]> = {};
+  searchParams.forEach((value, key) => {
+    if (params[key]) {
+      const existing = params[key];
+      params[key] = Array.isArray(existing) ? [...existing, value] : [existing, value];
+    } else {
+      params[key] = value;
+    }
+  });
+  return params;
 };
 
 export const startUnifiedServer = (options: UnifiedServerOptions = {}) => {
@@ -118,6 +132,42 @@ export const startUnifiedServer = (options: UnifiedServerOptions = {}) => {
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", `http://${req.headers.host ?? "localhost"}`);
+    const debugEnabled = shouldDebugToolCalls(serverLogger);
+    const requestStart = performance.now();
+    const requestMeta = {
+      method: req.method ?? "UNKNOWN",
+      path: url.pathname,
+      query: getQueryParams(url.searchParams),
+      headers: sanitizeHeaders(req.headers),
+      remoteAddress: req.socket.remoteAddress ?? "unknown"
+    };
+
+    if (debugEnabled) {
+      serverLogger.debug("http.request", requestMeta);
+    }
+
+    let responseLogged = false;
+    const logResponse = (overrides?: Record<string, unknown>) => {
+      if (!debugEnabled || responseLogged) {
+        return;
+      }
+      responseLogged = true;
+      serverLogger.debug("http.response", {
+        ...requestMeta,
+        status: res.statusCode ?? 0,
+        durationMs: performance.now() - requestStart,
+        ...overrides
+      });
+    };
+
+    res.on("finish", () => {
+      logResponse();
+    });
+    res.on("close", () => {
+      if (!res.writableEnded) {
+        logResponse({ aborted: true });
+      }
+    });
 
     try {
       if (req.method === "OPTIONS") {

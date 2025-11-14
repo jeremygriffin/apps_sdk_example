@@ -1,4 +1,4 @@
-import { IncomingMessage } from "node:http";
+import { IncomingHttpHeaders, IncomingMessage } from "node:http";
 
 export const readJsonBody = (req: IncomingMessage): Promise<unknown> =>
   new Promise((resolve, reject) => {
@@ -23,3 +23,36 @@ export const readJsonBody = (req: IncomingMessage): Promise<unknown> =>
         }
       });
   });
+
+const SENSITIVE_HEADER_KEYS = new Set([
+  "authorization",
+  "proxy-authorization",
+  "cookie",
+  "set-cookie",
+  "x-api-key"
+]);
+
+const redactHeaderValue = (value: string | string[]): string | string[] => {
+  if (Array.isArray(value)) {
+    return value.map(() => "[REDACTED]");
+  }
+  return "[REDACTED]";
+};
+
+export const sanitizeHeaders = (
+  headers: IncomingHttpHeaders
+): Record<string, string | string[]> => {
+  return Object.entries(headers).reduce<Record<string, string | string[]>>(
+    (acc, [key, value]) => {
+      if (value === undefined) {
+        return acc;
+      }
+      const normalizedKey = key.toLowerCase();
+      acc[key] = SENSITIVE_HEADER_KEYS.has(normalizedKey)
+        ? redactHeaderValue(value)
+        : value;
+      return acc;
+    },
+    {}
+  );
+};

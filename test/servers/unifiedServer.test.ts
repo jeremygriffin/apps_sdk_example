@@ -5,11 +5,11 @@ import { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { config } from "../../src/config";
-import { createLogger } from "../../src/logger";
+import { createLogger, LogEvent, Logger } from "../../src/logger";
 import { startUnifiedServer } from "../../src/servers/unifiedServer";
 
-const connect = async () => {
-  const server = startUnifiedServer({ host: "127.0.0.1", port: 0, logger: createLogger("error") });
+const connect = async (logger: Logger = createLogger("error")) => {
+  const server = startUnifiedServer({ host: "127.0.0.1", port: 0, logger });
   await once(server, "listening");
   const address = server.address() as AddressInfo;
   const baseUrl = `http://${address.address}:${address.port}`;
@@ -102,5 +102,62 @@ describe("unified server", () => {
       );
       req.end();
     });
+  });
+
+  test("logs request metadata in debug mode", async () => {
+    const events: LogEvent[] = [];
+    const debugLogger = createLogger("debug", (event) => {
+      events.push(event);
+    });
+    const { server: debugServer, baseUrl: debugBaseUrl } = await connect(debugLogger);
+
+    await new Promise<void>((resolve, reject) => {
+      const req = request(
+        `${debugBaseUrl}/healthz?foo=bar&foo=baz&single=value`,
+        {
+          method: "GET",
+          headers: {
+            authorization: "Bearer secret-token",
+            "x-custom-header": "ok"
+          }
+        },
+        (res) => {
+          res.resume();
+          res.on("end", resolve);
+        }
+      );
+      req.on("error", reject);
+      req.end();
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      debugServer.close((error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+
+    const requestEvent = events.find((event) => event.logger === "http.request");
+    expect(requestEvent).toBeDefined();
+    expect(requestEvent?.data?.path).toBe("/healthz");
+    expect(requestEvent?.data?.method).toBe("GET");
+
+    const headers = requestEvent?.data?.headers as Record<string, unknown>;
+    expect(headers["authorization"]).toBe("[REDACTED]");
+    expect(headers["x-custom-header"]).toBe("ok");
+
+    const query = requestEvent?.data?.query as Record<string, unknown>;
+    expect(query["single"]).toBe("value");
+    expect(query["foo"]).toEqual(["bar", "baz"]);
+
+    const responseEvent = events.find((event) => event.logger === "http.response");
+    expect(responseEvent).toBeDefined();
+    expect(responseEvent?.data?.path).toBe("/healthz");
+    expect(responseEvent?.data?.status).toBe(200);
+    expect(typeof responseEvent?.data?.durationMs).toBe("number");
+    expect(responseEvent?.data?.aborted).toBeUndefined();
   });
 });

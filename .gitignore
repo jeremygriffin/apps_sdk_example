@@ -1,3 +1,6 @@
+# stash directories for comparison
+DO_NOT_COMMIT
+
 # Dependencies and caches
 node_modules/
 .pnpm-store/

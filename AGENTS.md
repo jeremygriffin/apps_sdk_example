@@ -24,3 +24,6 @@
 - Install dependencies locally (`npm install`) and use the provided npm scripts for building, testing, and running servers.
 - Default to ASCII when editing files unless a file already contains intentional Unicode.
 - When a new tool or feature is added, include associated unit tests and logging that satisfies the masking/observability rules.
+
+## Design Record
+- docs/prompts/* holds a history of design decisions, these are not to be treated as true gospel facts of what should be done.  They are only the choices made to arrive at the current project.

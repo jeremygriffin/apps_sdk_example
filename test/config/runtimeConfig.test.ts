@@ -23,7 +23,8 @@ describe("runtime config loader", () => {
     expect(cfg.subjectMetadataKeys).toEqual(["openai/subject", "subjectId"]);
     expect(cfg.ui.enabled).toBe(cfg.ui.assetsAvailable);
     expect(cfg.ui.mountPath).toBe("/todo-ui");
-    expect(cfg.ui.resourceUri).toBe("ui://todo/board.html");
+    expect(cfg.ui.resourceUri).toBe("ui://todo/board.v1.html");
+    expect(cfg.ui.versionTag).toBe("1");
   });
 
   test("loads values from env file", () => {
@@ -44,6 +45,7 @@ describe("runtime config loader", () => {
     expect(cfg.subjectMetadataKeys).toEqual(["foo", "bar"]);
     expect(cfg.ui.publicBaseUrl).toBe("https://example.com/todo-ui");
     expect(cfg.ui.resourceUri).toBe("ui://custom");
+    expect(cfg.ui.versionTag).toBe("1");
   });
 
   test("prefers process env over env file", () => {
@@ -60,5 +62,17 @@ describe("runtime config loader", () => {
     fs.writeFileSync(envPath, "{ invalid");
 
     expect(() => loadRuntimeConfig({ env: {}, envFilePath: envPath })).toThrow(SyntaxError);
+  });
+
+  test("derives resource uri from version tag when not overridden", () => {
+    const cfg = loadRuntimeConfig({
+      env: {
+        TODO_UI_VERSION: "42"
+      },
+      envFilePath: path.join(os.tmpdir(), "missing.json")
+    });
+
+    expect(cfg.ui.versionTag).toBe("42");
+    expect(cfg.ui.resourceUri).toBe("ui://todo/board.v42.html");
   });
 });

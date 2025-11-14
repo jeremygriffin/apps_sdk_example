@@ -82,7 +82,7 @@ Debug logging for the UI can be enabled by appending `?debug=1` to the iframe UR
 ChatGPT’s Developer Mode discovers custom cards through MCP resources. The server now:
 
 1. Serves the built UI bundle from `packages/todo-ui/dist` at `/todo-ui/*`.
-2. Registers a resource (`ui://todo/board.html`) with `mimeType: text/html+skybridge`.
+2. Registers a resource (`ui://todo/board.v1.html`) with `mimeType: text/html+skybridge`.
 3. Returns the widget metadata (`openai/outputTemplate`, `openai/toolInvocation/*`) from both the resource handlers and every tool response so ChatGPT knows to render the card inline.
 
 To light this up end-to-end:
@@ -99,7 +99,10 @@ Environment knobs:
 | `PUBLIC_SERVER_URL` | Public origin that serves both MCP endpoints and the `/todo-ui` static assets. Required when tunneling or deploying. | `http://localhost:<SERVER_PORT>` |
 | `TODO_UI_DIST_PATH` | Override the location of the built bundle. | `packages/todo-ui/dist` |
 | `TODO_UI_MOUNT_PATH` | HTTP path that exposes the UI assets. | `/todo-ui` |
-| `TODO_UI_RESOURCE_URI` | MCP resource URI advertised to ChatGPT. | `ui://todo/board.html` |
+| `TODO_UI_RESOURCE_URI` | MCP resource URI advertised to ChatGPT. | `ui://todo/board.v1.html` |
+| `TODO_UI_VERSION` | Version tag appended to the default resource URI (`v<version>`). Bump when rebuilding the UI to bust caches. | `1` |
 | `TODO_UI_TOOL_INVOKING` / `TODO_UI_TOOL_INVOKED` | Strings used for `openai/toolInvocation` metadata. | Friendly defaults |
 
 If the dist folder is missing the server will skip resource registration; rebuild the UI and restart to re-enable it.
+
+Whenever you ship UI changes, bump `TODO_UI_VERSION` (for example from `1` to `2`). The server automatically emits `ui://todo/board.v<version>.html`, so changing the version ensures ChatGPT fetches the new HTML instead of reusing a cached template.

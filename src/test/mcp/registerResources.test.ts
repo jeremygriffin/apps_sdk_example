@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { registerResourcesWithServer } from "@/mcp/registerResources";
 
 const mockDescriptor = {
-  uri: "ui://todo/board.html",
+  uri: "ui://todo/board.v1.html",
   name: "Todo board",
   description: "desc",
   mimeType: "text/html+skybridge",

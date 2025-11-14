@@ -117,6 +117,7 @@ export interface RuntimeConfig {
     mountPath: string;
     publicBaseUrl: string;
     resourceUri: string;
+    versionTag: string;
     resourceName: string;
     resourceDescription: string;
     toolInvocation: {
@@ -172,7 +173,9 @@ export const loadRuntimeConfig = (options: ConfigLoaderOptions = {}): RuntimeCon
     ? trimTrailingSlash(publicServerUrlRaw)
     : `http://localhost:${serverPort}`;
   const uiPublicBaseUrl = `${normalizedServerUrl}${uiMountPath}`;
-  const uiResourceUri = fromSources("TODO_UI_RESOURCE_URI") ?? "ui://todo/board.html";
+  const uiVersionTag = fromSources("TODO_UI_VERSION") ?? "1";
+  const uiResourceUri =
+    fromSources("TODO_UI_RESOURCE_URI") ?? `ui://todo/board.v${uiVersionTag}.html`;
   const uiResourceName = fromSources("TODO_UI_RESOURCE_NAME") ?? "Todo board";
   const uiResourceDescription =
     fromSources("TODO_UI_RESOURCE_DESCRIPTION") ?? "Interactive todo board UI";
@@ -206,6 +209,7 @@ export const loadRuntimeConfig = (options: ConfigLoaderOptions = {}): RuntimeCon
       mountPath: uiMountPath,
       publicBaseUrl: uiPublicBaseUrl,
       resourceUri: uiResourceUri,
+      versionTag: uiVersionTag,
       resourceName: uiResourceName,
       resourceDescription: uiResourceDescription,
       toolInvocation: {

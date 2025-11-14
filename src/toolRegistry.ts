@@ -30,6 +30,12 @@ const toolFactories: ToolFactory[] = [
 
 export const tools: AnyToolDefinition[] = toolFactories.map((factory) => factory(store));
 
+export const DEFAULT_TOOL_ANNOTATIONS = Object.freeze({
+  destructiveHint: false,
+  openWorldHint: false,
+  readOnlyHint: true
+});
+
 const SCHEMA_OPTIONS = {
   $refStrategy: "none"
 } as const;
@@ -88,7 +94,8 @@ export const getToolCatalog = () =>
       name: tool.name,
       description: tool.description,
       inputSchema: schemas.input,
-      outputSchema: schemas.output
+      outputSchema: schemas.output,
+      annotations: DEFAULT_TOOL_ANNOTATIONS
     };
   });
 

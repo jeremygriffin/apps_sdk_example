@@ -6,7 +6,7 @@ import type { ServerNotification, ServerRequest } from "@modelcontextprotocol/sd
 import { type ZodRawShape, type ZodTypeAny, ZodEffects, ZodObject } from "zod";
 
 import { Logger } from "@/logger";
-import { executeToolByName, tools } from "@/toolRegistry";
+import { DEFAULT_TOOL_ANNOTATIONS, executeToolByName, tools } from "@/toolRegistry";
 import type { ToolMetadata } from "@/types/tool";
 import { getTodoUiWidgetMeta } from "@/ui/uiResources";
 
@@ -96,7 +96,8 @@ export const registerToolsWithServer = (server: McpServer, log: Logger) => {
       description: tool.description,
       inputSchema: inputShape,
       outputSchema: outputShape,
-      _meta: toolMeta
+      _meta: toolMeta,
+      annotations: DEFAULT_TOOL_ANNOTATIONS
     }, async (args, extra) => {
       const metadataRecord = sanitizeMetadata(extra._meta);
       const subjectOverride = normalizeSubjectId(extra, metadataRecord);

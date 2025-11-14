@@ -8,6 +8,8 @@ import { config } from "../../src/config";
 import { createLogger, LogEvent, Logger } from "../../src/logger";
 import { startUnifiedServer } from "../../src/servers/unifiedServer";
 
+const assetTest = config.ui.enabled ? test : test.skip;
+
 const connect = async (logger: Logger = createLogger("error")) => {
   const server = startUnifiedServer({ host: "127.0.0.1", port: 0, logger });
   await once(server, "listening");
@@ -159,5 +161,35 @@ describe("unified server", () => {
     expect(responseEvent?.data?.status).toBe(200);
     expect(typeof responseEvent?.data?.durationMs).toBe("number");
     expect(responseEvent?.data?.aborted).toBeUndefined();
+  });
+
+  assetTest("serves todo ui assets with cors headers", async () => {
+    await new Promise<void>((resolve, reject) => {
+      http.get(`${baseUrl}${config.ui.mountPath}/index.html`, (res) => {
+        expect(res.statusCode).toBe(200);
+        expect(res.headers["access-control-allow-origin"]).toBe("*");
+        expect(res.headers["access-control-allow-methods"]).toContain("GET");
+        res.resume();
+        res.on("end", resolve);
+      }).on("error", reject);
+    });
+  });
+
+  assetTest("responds to todo ui asset preflight requests", async () => {
+    await new Promise<void>((resolve, reject) => {
+      const req = request(
+        `${baseUrl}${config.ui.mountPath}/index.html`,
+        { method: "OPTIONS" },
+        (res) => {
+          expect(res.statusCode).toBe(204);
+          expect(res.headers["access-control-allow-origin"]).toBe("*");
+          expect(res.headers["access-control-allow-methods"]).toContain("OPTIONS");
+          res.resume();
+          res.on("end", resolve);
+        }
+      );
+      req.on("error", reject);
+      req.end();
+    });
   });
 });

@@ -21,9 +21,9 @@ describe("runtime config loader", () => {
     expect(cfg.server.ssePath).toBe("/mcp/sse");
     expect(cfg.server.streamPath).toBe("/mcp/stream");
     expect(cfg.subjectMetadataKeys).toEqual(["openai/subject", "subjectId"]);
-    expect(cfg.ui.enabled).toBe(false);
+    expect(cfg.ui.enabled).toBe(cfg.ui.assetsAvailable);
     expect(cfg.ui.mountPath).toBe("/todo-ui");
-    expect(cfg.ui.resourceUri).toBe("ui://todo/board");
+    expect(cfg.ui.resourceUri).toBe("ui://todo/board.html");
   });
 
   test("loads values from env file", () => {

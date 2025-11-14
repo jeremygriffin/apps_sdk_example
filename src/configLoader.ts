@@ -172,7 +172,7 @@ export const loadRuntimeConfig = (options: ConfigLoaderOptions = {}): RuntimeCon
     ? trimTrailingSlash(publicServerUrlRaw)
     : `http://localhost:${serverPort}`;
   const uiPublicBaseUrl = `${normalizedServerUrl}${uiMountPath}`;
-  const uiResourceUri = fromSources("TODO_UI_RESOURCE_URI") ?? "ui://todo/board";
+  const uiResourceUri = fromSources("TODO_UI_RESOURCE_URI") ?? "ui://todo/board.html";
   const uiResourceName = fromSources("TODO_UI_RESOURCE_NAME") ?? "Todo board";
   const uiResourceDescription =
     fromSources("TODO_UI_RESOURCE_DESCRIPTION") ?? "Interactive todo board UI";

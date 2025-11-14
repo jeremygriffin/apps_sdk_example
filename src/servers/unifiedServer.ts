@@ -89,6 +89,12 @@ const MIME_TYPES: Record<string, string> = {
   ".gif": "image/gif"
 };
 
+const setTodoUiCorsHeaders = (res: http.ServerResponse) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Range, Accept");
+};
+
 const serveTodoUiAsset = (
   req: http.IncomingMessage,
   res: http.ServerResponse,
@@ -96,32 +102,57 @@ const serveTodoUiAsset = (
   log: Logger
 ) => {
   const mountPath = config.ui.mountPath;
-  if (!config.ui.enabled || req.method !== "GET" || !url.pathname.startsWith(mountPath)) {
+  if (!config.ui.enabled || !url.pathname.startsWith(mountPath)) {
     return false;
   }
+  const respondWithJson = (status: number, payload: unknown) => {
+    setTodoUiCorsHeaders(res);
+    sendJson(res, status, payload);
+  };
+
+  if (!["GET", "HEAD", "OPTIONS"].includes(req.method ?? "GET")) {
+    return false;
+  }
+
   if (!config.ui.assetsAvailable) {
-    sendJson(res, 404, { error: "Todo UI bundle unavailable" });
+    respondWithJson(404, { error: "Todo UI bundle unavailable" });
     return true;
   }
+
+  if (req.method === "OPTIONS") {
+    setTodoUiCorsHeaders(res);
+    res.setHeader("Cache-Control", "no-cache");
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+
   const trimmed = url.pathname.slice(mountPath.length);
   const pathname = trimmed.length > 0 ? trimmed : "/";
   const relativePath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
   const absolutePath = path.resolve(config.ui.distPath, relativePath);
   if (!absolutePath.startsWith(config.ui.distPath)) {
-    sendJson(res, 403, { error: "Forbidden" });
+    respondWithJson(403, { error: "Forbidden" });
     return true;
   }
   if (!fs.existsSync(absolutePath) || fs.statSync(absolutePath).isDirectory()) {
-    sendJson(res, 404, { error: "Not found" });
+    respondWithJson(404, { error: "Not found" });
     return true;
   }
 
   const ext = path.extname(absolutePath).toLowerCase();
   const contentType = MIME_TYPES[ext] ?? "application/octet-stream";
-  res.writeHead(200, {
-    "Content-Type": contentType,
-    "Cache-Control": ext === ".html" ? "no-cache" : "public, max-age=300"
-  });
+  setTodoUiCorsHeaders(res);
+  res.setHeader("Content-Type", contentType);
+  res.setHeader("Cache-Control", ext === ".html" ? "no-cache" : "public, max-age=300");
+
+  if (req.method === "HEAD") {
+    res.writeHead(200);
+    res.end();
+    return true;
+  }
+
+  res.writeHead(200);
   const stream = fs.createReadStream(absolutePath);
   stream.on("error", (error) => {
     log.error("failed to stream todo ui asset", {
@@ -233,12 +264,12 @@ export const startUnifiedServer = (options: UnifiedServerOptions = {}) => {
     });
 
     try {
-      if (req.method === "OPTIONS") {
-        sendJson(res, 204, {});
+      if (serveTodoUiAsset(req, res, url, serverLogger)) {
         return;
       }
 
-      if (serveTodoUiAsset(req, res, url, serverLogger)) {
+      if (req.method === "OPTIONS") {
+        sendJson(res, 204, {});
         return;
       }
 

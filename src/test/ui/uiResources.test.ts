@@ -11,7 +11,7 @@ const mockConfig = {
     indexHtmlPath: "",
     mountPath: "/todo-ui",
     publicBaseUrl: "https://example.com/todo-ui",
-    resourceUri: "ui://todo/board",
+    resourceUri: "ui://todo/board.html",
     resourceName: "Todo board",
     resourceDescription: "desc",
     toolInvocation: {
@@ -76,7 +76,7 @@ describe("todo ui resources", () => {
   it("returns widget metadata when enabled", () => {
     const meta = getTodoUiWidgetMeta();
     expect(meta).toMatchObject({
-      "openai/outputTemplate": "ui://todo/board"
+      "openai/outputTemplate": "ui://todo/board.html"
     });
   });
 
@@ -87,7 +87,7 @@ describe("todo ui resources", () => {
 
   it("exposes descriptor for list resources", () => {
     const descriptor = getTodoUiResourceDescriptor();
-    expect(descriptor.uri).toBe("ui://todo/board");
+    expect(descriptor.uri).toBe("ui://todo/board.html");
     expect(descriptor.mimeType).toBe("text/html+skybridge");
   });
 });

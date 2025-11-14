@@ -27,7 +27,7 @@ The server now exposes both MCP transports on a single HTTP listener (default `h
 - SSE stream: `GET http://localhost:3001/mcp/sse` then `POST` JSON-RPC messages to `/mcp/sse/messages?sessionId=<id>`
 - Streamable HTTP: `http://localhost:3001/mcp/stream` for POST/GET/DELETE as defined in the MCP spec
 
-Configuration can be provided via `env.json` in the repository root or standard environment variables. Values from the shell override anything defined in `env.json`. Supported keys include `SERVER_HOST`, `SERVER_PORT`, `SSE_PATH`, `SSE_MESSAGE_PATH`, `STREAMING_PATH`, `LOG_LEVEL`, `DEBUG_TOOL_CALLS`, and `SUBJECT_METADATA_KEYS`.
+Configuration can be provided via `env.json` in the repository root or standard environment variables. A sample file (`env.example.json`) is included—copy it to `env.json` and edit the values you need. Values from the shell override anything defined in `env.json`. Supported keys include `SERVER_HOST`, `SERVER_PORT`, `SSE_PATH`, `SSE_MESSAGE_PATH`, `STREAMING_PATH`, `LOG_LEVEL`, `DEBUG_TOOL_CALLS`, `PUBLIC_SERVER_URL`, and `TODO_UI_*` settings.
 
 ```json
 {

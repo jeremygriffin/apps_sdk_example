@@ -76,3 +76,30 @@ Tests cover the storage layer, logging utility, and every tool handler to guard 
 The `packages/todo-ui` directory contains the React + Vite UI that renders inside ChatGPT. It communicates solely through `window.openai.callTool` and handles structured logging plus a local development shim. Use the scripts above (`npm run dev:ui`, `npm run build:ui`, `npm run preview:ui`) to work on the frontend locally.
 
 Debug logging for the UI can be enabled by appending `?debug=1` to the iframe URL or by running `localStorage.setItem("todo-ui-debug", "1")`. When debug mode is enabled, the UI surfaces bridge diagnostics, tool-call traces, and optional error details.
+
+### Surfacing the UI in Developer Mode (resources)
+
+ChatGPT’s Developer Mode discovers custom cards through MCP resources. The server now:
+
+1. Serves the built UI bundle from `packages/todo-ui/dist` at `/todo-ui/*`.
+2. Registers a resource (`ui://todo/board`) with `mimeType: text/html+skybridge`.
+3. Returns the widget metadata (`openai/outputTemplate`, `openai/toolInvocation/*`) from both the resource handlers and every tool response so ChatGPT knows to render the card inline.
+
+To light this up end-to-end:
+
+1. Run `npm run build:ui` so `packages/todo-ui/dist` exists.
+2. Start the MCP server (`npm start`). It will automatically host `/todo-ui` and advertise the resource.
+3. When tunneling through `ngrok` (or deploying), set `PUBLIC_SERVER_URL` so the resource HTML can reference absolute asset URLs (for local testing you can leave it empty and the default `http://localhost:<port>` will be used).
+4. Connect your Developer Mode app to the tunneled MCP endpoint. ChatGPT will call `resources/list`/`read`, fetch the HTML, and render the cards automatically inside the conversation.
+
+Environment knobs:
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `PUBLIC_SERVER_URL` | Public origin that serves both MCP endpoints and the `/todo-ui` static assets. Required when tunneling or deploying. | `http://localhost:<SERVER_PORT>` |
+| `TODO_UI_DIST_PATH` | Override the location of the built bundle. | `packages/todo-ui/dist` |
+| `TODO_UI_MOUNT_PATH` | HTTP path that exposes the UI assets. | `/todo-ui` |
+| `TODO_UI_RESOURCE_URI` | MCP resource URI advertised to ChatGPT. | `ui://todo/board` |
+| `TODO_UI_TOOL_INVOKING` / `TODO_UI_TOOL_INVOKED` | Strings used for `openai/toolInvocation` metadata. | Friendly defaults |
+
+If the dist folder is missing the server will skip resource registration; rebuild the UI and restart to re-enable it.

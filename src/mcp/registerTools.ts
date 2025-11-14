@@ -8,6 +8,7 @@ import { type ZodRawShape, type ZodTypeAny, ZodEffects, ZodObject } from "zod";
 import { Logger } from "@/logger";
 import { executeToolByName, tools } from "@/toolRegistry";
 import type { ToolMetadata } from "@/types/tool";
+import { getTodoUiWidgetMeta } from "@/ui/uiResources";
 
 const SUBJECT_HEADER_CANDIDATES = ["x-openai-subject", "x-subject-id", "openai-subject"];
 
@@ -87,12 +88,15 @@ export const registerToolsWithServer = (server: McpServer, log: Logger) => {
   tools.forEach((tool) => {
     const inputShape = toRawShape(tool.inputSchema);
     const outputShape = toRawShape(tool.outputSchema);
+    const widgetMeta = getTodoUiWidgetMeta();
+    const toolMeta = widgetMeta ? { ...widgetMeta } : undefined;
 
     server.registerTool(tool.name, {
       title: tool.name,
       description: tool.description,
       inputSchema: inputShape,
-      outputSchema: outputShape
+      outputSchema: outputShape,
+      _meta: toolMeta
     }, async (args, extra) => {
       const metadataRecord = sanitizeMetadata(extra._meta);
       const subjectOverride = normalizeSubjectId(extra, metadataRecord);
@@ -114,7 +118,8 @@ export const registerToolsWithServer = (server: McpServer, log: Logger) => {
               text: JSON.stringify(result, null, 2)
             }
           ],
-          structuredContent: result
+          structuredContent: result,
+          _meta: widgetMeta ? { ...widgetMeta } : undefined
         };
       } catch (error) {
         log.error("mcp tool handler failed", {

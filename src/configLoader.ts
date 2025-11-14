@@ -92,6 +92,13 @@ const readEnvJson = (
   }
 };
 
+const ensureLeadingSlash = (value: string): string => {
+  if (!value) return "/";
+  return value.startsWith("/") ? value : `/${value}`;
+};
+
+const trimTrailingSlash = (value: string): string => value.replace(/\/+$/, "") || "/";
+
 export interface RuntimeConfig {
   logLevel: LogLevelName;
   debugToolCalls: boolean;
@@ -102,6 +109,21 @@ export interface RuntimeConfig {
     ssePath: string;
     sseMessagesPath: string;
     streamPath: string;
+  };
+  ui: {
+    enabled: boolean;
+    distPath: string;
+    indexHtmlPath: string;
+    mountPath: string;
+    publicBaseUrl: string;
+    resourceUri: string;
+    resourceName: string;
+    resourceDescription: string;
+    toolInvocation: {
+      invoking: string;
+      invoked: string;
+    };
+    assetsAvailable: boolean;
   };
   subjectMetadataKeys: string[];
   configSources: {
@@ -135,6 +157,31 @@ export const loadRuntimeConfig = (options: ConfigLoaderOptions = {}): RuntimeCon
   const sseMessagesPath = fromSources("SSE_MESSAGE_PATH") ?? "/mcp/sse/messages";
   const streamPath = fromSources("STREAMING_PATH") ?? "/mcp/stream";
 
+  const uiEnabled = parseBoolean(fromSources("TODO_UI_ENABLED"), true);
+  const uiDistPath = path.resolve(
+    process.cwd(),
+    fromSources("TODO_UI_DIST_PATH") ?? path.join("packages", "todo-ui", "dist")
+  );
+  const uiIndexFile = path.resolve(
+    uiDistPath,
+    fromSources("TODO_UI_INDEX_FILE") ?? "index.html"
+  );
+  const uiMountPath = ensureLeadingSlash(fromSources("TODO_UI_MOUNT_PATH") ?? "/todo-ui");
+  const publicServerUrlRaw = fromSources("PUBLIC_SERVER_URL") ?? fromSources("SERVER_PUBLIC_URL");
+  const normalizedServerUrl = publicServerUrlRaw
+    ? trimTrailingSlash(publicServerUrlRaw)
+    : `http://localhost:${serverPort}`;
+  const uiPublicBaseUrl = `${normalizedServerUrl}${uiMountPath}`;
+  const uiResourceUri = fromSources("TODO_UI_RESOURCE_URI") ?? "ui://todo/board";
+  const uiResourceName = fromSources("TODO_UI_RESOURCE_NAME") ?? "Todo board";
+  const uiResourceDescription =
+    fromSources("TODO_UI_RESOURCE_DESCRIPTION") ?? "Interactive todo board UI";
+  const uiToolInvoking =
+    fromSources("TODO_UI_TOOL_INVOKING") ?? "Loading the todo board";
+  const uiToolInvoked =
+    fromSources("TODO_UI_TOOL_INVOKED") ?? "Todo board ready";
+  const uiAssetsAvailable = fs.existsSync(uiDistPath) && fs.existsSync(uiIndexFile);
+
   const subjectKeysRaw = fromSources("SUBJECT_METADATA_KEYS") ?? "openai/subject,subjectId";
   const subjectMetadataKeys = subjectKeysRaw
     .split(",")
@@ -151,6 +198,21 @@ export const loadRuntimeConfig = (options: ConfigLoaderOptions = {}): RuntimeCon
       ssePath,
       sseMessagesPath,
       streamPath
+    },
+    ui: {
+      enabled: uiEnabled && uiAssetsAvailable,
+      distPath: uiDistPath,
+      indexHtmlPath: uiIndexFile,
+      mountPath: uiMountPath,
+      publicBaseUrl: uiPublicBaseUrl,
+      resourceUri: uiResourceUri,
+      resourceName: uiResourceName,
+      resourceDescription: uiResourceDescription,
+      toolInvocation: {
+        invoking: uiToolInvoking,
+        invoked: uiToolInvoked
+      },
+      assetsAvailable: uiAssetsAvailable
     },
     subjectMetadataKeys,
     configSources: {

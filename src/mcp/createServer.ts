@@ -4,6 +4,7 @@ import { ErrorCode, McpError, SetLevelRequestSchema } from "@modelcontextprotoco
 import { isLogLevel, logger as defaultLogger, Logger } from "@/logger";
 import { registerToolsWithServer } from "./registerTools";
 import { registerPromptsWithServer } from "./registerPrompts";
+import { registerResourcesWithServer } from "./registerResources";
 
 const SERVER_NAME = "todo-mcp";
 
@@ -53,6 +54,7 @@ export const createMcpServer = (options: CreateMcpServerOptions = {}) => {
   wireLoggingCapability(server, activeLogger);
   registerToolsWithServer(server, activeLogger);
   registerPromptsWithServer(server, activeLogger);
+  registerResourcesWithServer(server, activeLogger);
 
   const originalClose = server.close.bind(server);
   server.close = async () => {

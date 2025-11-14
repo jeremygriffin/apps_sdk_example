@@ -1,4 +1,6 @@
+import fs from "node:fs";
 import http from "node:http";
+import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import { URL } from "node:url";
@@ -72,6 +74,67 @@ const getQueryParams = (searchParams: URLSearchParams): Record<string, string | 
     }
   });
   return params;
+};
+
+const MIME_TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif"
+};
+
+const serveTodoUiAsset = (
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  url: URL,
+  log: Logger
+) => {
+  const mountPath = config.ui.mountPath;
+  if (!config.ui.enabled || req.method !== "GET" || !url.pathname.startsWith(mountPath)) {
+    return false;
+  }
+  if (!config.ui.assetsAvailable) {
+    sendJson(res, 404, { error: "Todo UI bundle unavailable" });
+    return true;
+  }
+  const trimmed = url.pathname.slice(mountPath.length);
+  const pathname = trimmed.length > 0 ? trimmed : "/";
+  const relativePath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
+  const absolutePath = path.resolve(config.ui.distPath, relativePath);
+  if (!absolutePath.startsWith(config.ui.distPath)) {
+    sendJson(res, 403, { error: "Forbidden" });
+    return true;
+  }
+  if (!fs.existsSync(absolutePath) || fs.statSync(absolutePath).isDirectory()) {
+    sendJson(res, 404, { error: "Not found" });
+    return true;
+  }
+
+  const ext = path.extname(absolutePath).toLowerCase();
+  const contentType = MIME_TYPES[ext] ?? "application/octet-stream";
+  res.writeHead(200, {
+    "Content-Type": contentType,
+    "Cache-Control": ext === ".html" ? "no-cache" : "public, max-age=300"
+  });
+  const stream = fs.createReadStream(absolutePath);
+  stream.on("error", (error) => {
+    log.error("failed to stream todo ui asset", {
+      path: absolutePath,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    if (!res.headersSent) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+    }
+    res.end(JSON.stringify({ error: "Failed to read asset" }));
+  });
+  stream.pipe(res);
+  return true;
 };
 
 export const startUnifiedServer = (options: UnifiedServerOptions = {}) => {
@@ -172,6 +235,10 @@ export const startUnifiedServer = (options: UnifiedServerOptions = {}) => {
     try {
       if (req.method === "OPTIONS") {
         sendJson(res, 204, {});
+        return;
+      }
+
+      if (serveTodoUiAsset(req, res, url, serverLogger)) {
         return;
       }
 

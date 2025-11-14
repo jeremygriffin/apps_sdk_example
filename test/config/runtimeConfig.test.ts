@@ -21,6 +21,9 @@ describe("runtime config loader", () => {
     expect(cfg.server.ssePath).toBe("/mcp/sse");
     expect(cfg.server.streamPath).toBe("/mcp/stream");
     expect(cfg.subjectMetadataKeys).toEqual(["openai/subject", "subjectId"]);
+    expect(cfg.ui.enabled).toBe(false);
+    expect(cfg.ui.mountPath).toBe("/todo-ui");
+    expect(cfg.ui.resourceUri).toBe("ui://todo/board");
   });
 
   test("loads values from env file", () => {
@@ -28,7 +31,9 @@ describe("runtime config loader", () => {
       SERVER_PORT: "4100",
       SERVER_HOST: "127.0.0.1",
       SSE_PATH: "/custom/sse",
-      SUBJECT_METADATA_KEYS: "foo,bar"
+      SUBJECT_METADATA_KEYS: "foo,bar",
+      PUBLIC_SERVER_URL: "https://example.com",
+      TODO_UI_RESOURCE_URI: "ui://custom"
     });
 
     const cfg = loadRuntimeConfig({ env: {}, envFilePath: envPath });
@@ -37,6 +42,8 @@ describe("runtime config loader", () => {
     expect(cfg.server.host).toBe("127.0.0.1");
     expect(cfg.server.ssePath).toBe("/custom/sse");
     expect(cfg.subjectMetadataKeys).toEqual(["foo", "bar"]);
+    expect(cfg.ui.publicBaseUrl).toBe("https://example.com/todo-ui");
+    expect(cfg.ui.resourceUri).toBe("ui://custom");
   });
 
   test("prefers process env over env file", () => {

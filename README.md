@@ -37,6 +37,17 @@ Configuration can be provided via `env.json` in the repository root or standard 
 }
 ```
 
+### Changing Ports Quickly
+The HTTP listener always uses `SERVER_PORT` (default `3001`). Set it inline for ad-hoc runs (`SERVER_PORT=4100 npm start`) or pin it inside `env.json` when you need a repeatable local default. `SERVER_HOST` behaves the same way, so you can bind to `0.0.0.0` for containerized testing without touching the codebase. All transports—SSE stream, SSE messages, and streamable HTTP—share this single listener, so you only need to change the port once.
+
+### Why `/mcp/sse/messages`?
+The SSE adapter deliberately splits the endpoints:
+
+- `GET /mcp/sse` upgrades the connection to a server-sent events stream so the client can receive JSON-RPC responses.
+- JSON-RPC requests must be `POST`ed to `/mcp/sse/messages?sessionId=<id>`, not `/mcp/sse`, because the SSE stream endpoint is read-only. The separate `/messages` path lets us keep the stream connection open while accepting new tool calls on standard HTTP posts.
+
+If you need to customize either path, override `SSE_PATH` or `SSE_MESSAGE_PATH` via env vars or `env.json`.
+
 ### Invoking Tools
 Use any MCP-compatible client (e.g., OpenAI Apps SDK) to connect via either:
 

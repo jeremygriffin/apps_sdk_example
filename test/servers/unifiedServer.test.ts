@@ -192,4 +192,28 @@ describe("unified server", () => {
       req.end();
     });
   });
+
+  assetTest("emits logs for todo ui asset requests", async () => {
+    const events: LogEvent[] = [];
+    const assetLogger = createLogger("debug", (event) => {
+      events.push(event);
+    });
+    const { server: assetServer, baseUrl: assetBase } = await connect(assetLogger);
+
+    await new Promise<void>((resolve, reject) => {
+      http.get(`${assetBase}${config.ui.mountPath}/index.html`, (res) => {
+        res.resume();
+        res.on("end", resolve);
+      }).on("error", reject);
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      assetServer.close((error) => (error ? reject(error) : resolve()));
+    });
+
+    const assetEvent = events.find((event) => event.logger === "todo.ui.asset");
+    expect(assetEvent).toBeDefined();
+    expect(assetEvent?.data?.status).toBe(200);
+    expect(assetEvent?.data?.asset).toBe("index.html");
+  });
 });

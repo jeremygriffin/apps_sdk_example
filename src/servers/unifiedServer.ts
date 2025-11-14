@@ -105,9 +105,21 @@ const serveTodoUiAsset = (
   if (!config.ui.enabled || !url.pathname.startsWith(mountPath)) {
     return false;
   }
-  const respondWithJson = (status: number, payload: unknown) => {
+  const requestMeta = {
+    method: req.method ?? "GET",
+    path: url.pathname
+  };
+  const logAssetEvent = (status: number, data?: Record<string, unknown>) => {
+    log.info("todo.ui.asset", {
+      ...requestMeta,
+      status,
+      ...data
+    });
+  };
+  const respondWithJson = (status: number, payload: unknown, data?: Record<string, unknown>) => {
     setTodoUiCorsHeaders(res);
     sendJson(res, status, payload);
+    logAssetEvent(status, data);
   };
 
   if (!["GET", "HEAD", "OPTIONS"].includes(req.method ?? "GET")) {
@@ -115,7 +127,7 @@ const serveTodoUiAsset = (
   }
 
   if (!config.ui.assetsAvailable) {
-    respondWithJson(404, { error: "Todo UI bundle unavailable" });
+    respondWithJson(404, { error: "Todo UI bundle unavailable" }, { reason: "bundle_missing" });
     return true;
   }
 
@@ -124,6 +136,7 @@ const serveTodoUiAsset = (
     res.setHeader("Cache-Control", "no-cache");
     res.writeHead(204);
     res.end();
+    logAssetEvent(204, { kind: "preflight" });
     return true;
   }
 
@@ -132,11 +145,11 @@ const serveTodoUiAsset = (
   const relativePath = pathname === "/" ? "index.html" : pathname.replace(/^\/+/, "");
   const absolutePath = path.resolve(config.ui.distPath, relativePath);
   if (!absolutePath.startsWith(config.ui.distPath)) {
-    respondWithJson(403, { error: "Forbidden" });
+    respondWithJson(403, { error: "Forbidden" }, { asset: relativePath, reason: "path_traversal" });
     return true;
   }
   if (!fs.existsSync(absolutePath) || fs.statSync(absolutePath).isDirectory()) {
-    respondWithJson(404, { error: "Not found" });
+    respondWithJson(404, { error: "Not found" }, { asset: relativePath, reason: "missing" });
     return true;
   }
 
@@ -149,10 +162,12 @@ const serveTodoUiAsset = (
   if (req.method === "HEAD") {
     res.writeHead(200);
     res.end();
+    logAssetEvent(200, { asset: relativePath, kind: "head" });
     return true;
   }
 
   res.writeHead(200);
+  logAssetEvent(200, { asset: relativePath });
   const stream = fs.createReadStream(absolutePath);
   stream.on("error", (error) => {
     log.error("failed to stream todo ui asset", {

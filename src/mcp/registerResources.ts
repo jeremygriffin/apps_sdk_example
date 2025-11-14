@@ -1,3 +1,5 @@
+import { Buffer } from "node:buffer";
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   ErrorCode,
@@ -65,6 +67,10 @@ export const registerResourcesWithServer = (server: McpServer, log: Logger) => {
         `Todo UI bundle unavailable: ${error instanceof Error ? error.message : String(error)}`
       );
     }
+    log.info("todo.ui.resource", {
+      uri: descriptor.uri,
+      bytes: Buffer.byteLength(html, "utf-8")
+    });
 
     return {
       contents: [

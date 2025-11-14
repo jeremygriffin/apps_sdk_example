@@ -62,5 +62,9 @@ describe("registerResourcesWithServer", () => {
       uri: mockDescriptor.uri,
       mimeType: mockDescriptor.mimeType
     });
+    expect(loggerStub.info).toHaveBeenCalledWith(
+      "todo.ui.resource",
+      expect.objectContaining({ uri: mockDescriptor.uri })
+    );
   });
 });

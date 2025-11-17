@@ -13,6 +13,7 @@ import { config } from "@/config";
 import { createLogger, logger as defaultLogger, Logger, shouldDebugToolCalls } from "@/logger";
 import { createMcpServer } from "@/mcp/createServer";
 import { readJsonBody, sanitizeHeaders } from "@/utils/http";
+import { sanitizeStructuredContent } from "@/utils/sanitize";
 
 export interface UnifiedServerOptions {
   host?: string;
@@ -255,6 +256,23 @@ export const startUnifiedServer = (options: UnifiedServerOptions = {}) => {
       serverLogger.debug("http.request", requestMeta);
     }
 
+    const logTransportPayload = (
+      direction: "inbound" | "outbound",
+      channel: "sse" | "stream",
+      sessionId: string,
+      payload: unknown
+    ) => {
+      if (!debugEnabled) {
+        return;
+      }
+      serverLogger.debug("mcp.transport.message", {
+        direction,
+        channel,
+        sessionId,
+        body: sanitizeStructuredContent(payload)
+      });
+    };
+
     let responseLogged = false;
     const logResponse = (overrides?: Record<string, unknown>) => {
       if (!debugEnabled || responseLogged) {
@@ -298,6 +316,13 @@ export const startUnifiedServer = (options: UnifiedServerOptions = {}) => {
         const mcpServer = createMcpServer({ logger: sessionLogger });
         const transport = new SSEServerTransport(sseMessagesPath, res);
         const sessionId = transport.sessionId;
+        if (debugEnabled) {
+          const originalSend = transport.send.bind(transport);
+          transport.send = async (message) => {
+            logTransportPayload("outbound", "sse", sessionId, message);
+            await originalSend(message);
+          };
+        }
 
         const close = async () => {
           await mcpServer.close();
@@ -333,6 +358,7 @@ export const startUnifiedServer = (options: UnifiedServerOptions = {}) => {
           sendJson(res, 400, { ok: false, error: "Invalid JSON" });
           return;
         }
+        logTransportPayload("inbound", "sse", sessionId, body);
         await session.transport.handlePostMessage(req, res, body);
         return;
       }

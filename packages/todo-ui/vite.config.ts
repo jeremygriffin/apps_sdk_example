@@ -1,8 +1,11 @@
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
 
+const reactPlugins = react() as PluginOption | PluginOption[];
+const normalizedPlugins = Array.isArray(reactPlugins) ? reactPlugins : [reactPlugins];
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: normalizedPlugins,
   root: __dirname,
   server: {
     host: "0.0.0.0",
